@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.1</div>
+        <div class="splash-version">Pro v5.2</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1685,8 +1685,8 @@
                     </div>
                 </div>
 
-                <!-- 聲音選擇（男/女）-->
-                <div class="setting-item">
+                <!-- 聲音選擇（Web Speech 用）-->
+                <div class="setting-item" id="webVoiceSection">
                     <div class="setting-left">
                         <div class="setting-icon pink">👤</div>
                         <span class="setting-label">聲音類型</span>
@@ -1701,7 +1701,7 @@
                     </div>
                 </div>
 
-                <!-- Gemini API Key -->
+                <!-- Gemini API Key + 語音選擇 -->
                 <div class="setting-item" id="geminiKeySection" style="flex-direction:column;align-items:stretch;gap:8px;display:none;">
                     <div class="setting-left">
                         <div class="setting-icon green">🔑</div>
@@ -1711,9 +1711,53 @@
                     <div style="font-size:11px;color:var(--text-secondary);">
                         從 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">Google AI Studio</a> 取得
                     </div>
+                    <div class="setting-left" style="margin-top:8px;">
+                        <div class="setting-icon blue">🎭</div>
+                        <span class="setting-label">Gemini 語音（30種）</span>
+                    </div>
+                    <select id="geminiVoice" class="setting-input" style="width:100%;padding:10px;border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--bg-tertiary);">
+                        <optgroup label="⭐ 推薦">
+                            <option value="Zephyr">Zephyr（女，溫柔）</option>
+                            <option value="Puck">Puck（男，活潑）</option>
+                            <option value="Kore">Kore（女，清新）</option>
+                            <option value="Charon">Charon（男，沉穩）</option>
+                            <option value="Aoede">Aoede（女，優雅）</option>
+                        </optgroup>
+                        <optgroup label="👩 女聲">
+                            <option value="Leda">Leda</option>
+                            <option value="Callirrhoe">Callirrhoe</option>
+                            <option value="Autonoe">Autonoe</option>
+                            <option value="Despina">Despina</option>
+                            <option value="Erinome">Erinome</option>
+                            <option value="Laomedeia">Laomedeia</option>
+                            <option value="Pulcherrima">Pulcherrima</option>
+                        </optgroup>
+                        <optgroup label="👨 男聲">
+                            <option value="Orus">Orus</option>
+                            <option value="Fenrir">Fenrir</option>
+                            <option value="Enceladus">Enceladus</option>
+                            <option value="Iapetus">Iapetus</option>
+                            <option value="Umbriel">Umbriel</option>
+                            <option value="Algieba">Algieba</option>
+                            <option value="Algenib">Algenib</option>
+                            <option value="Rasalgethi">Rasalgethi</option>
+                        </optgroup>
+                        <optgroup label="🌟 其他">
+                            <option value="Achernar">Achernar</option>
+                            <option value="Alnilam">Alnilam</option>
+                            <option value="Schedar">Schedar</option>
+                            <option value="Gacrux">Gacrux</option>
+                            <option value="Achird">Achird</option>
+                            <option value="Zubenelgenubi">Zubenelgenubi</option>
+                            <option value="Vindemiatrix">Vindemiatrix</option>
+                            <option value="Sadachbia">Sadachbia</option>
+                            <option value="Sadaltager">Sadaltager</option>
+                            <option value="Sulafat">Sulafat</option>
+                        </optgroup>
+                    </select>
                 </div>
 
-                <!-- ElevenLabs API Key -->
+                <!-- ElevenLabs API Key + 語音選擇 -->
                 <div class="setting-item" id="elevenlabsKeySection" style="flex-direction:column;align-items:stretch;gap:8px;display:none;">
                     <div class="setting-left">
                         <div class="setting-icon purple">🔑</div>
@@ -1723,6 +1767,38 @@
                     <div style="font-size:11px;color:var(--text-secondary);">
                         從 <a href="https://elevenlabs.io/api" target="_blank" style="color:var(--accent);">ElevenLabs</a> 取得
                     </div>
+                    <div class="setting-left" style="margin-top:8px;">
+                        <div class="setting-icon pink">🎭</div>
+                        <span class="setting-label">ElevenLabs 語音</span>
+                    </div>
+                    <select id="elevenlabsVoice" class="setting-input" style="width:100%;padding:10px;border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--bg-tertiary);">
+                        <optgroup label="👩 女聲">
+                            <option value="21m00Tcm4TlvDq8ikWAM">Rachel（溫暖自然）</option>
+                            <option value="EXAVITQu4vr4xnSDxMaL">Bella（柔和甜美）</option>
+                            <option value="AZnzlk1XvdvUeBnXmlld">Domi（活潑年輕）</option>
+                            <option value="MF3mGyEYCl7XYWbV9V6O">Elli（清晰專業）</option>
+                            <option value="piTKgcLEGmPE4e6mEKli">Nicole（優雅成熟）</option>
+                            <option value="z9fAnlkpzviPz146aGWa">Glinda（明亮友善）</option>
+                            <option value="jBpfuIE2acCO8z3wKNLl">Gigi（年輕活力）</option>
+                            <option value="oWAxZDx7w5VEj9dCyTzz">Grace（沉穩知性）</option>
+                        </optgroup>
+                        <optgroup label="👨 男聲">
+                            <option value="pNInz6obpgDQGcFmaJgB">Adam（深沉穩重）</option>
+                            <option value="ErXwobaYiN019PkySvjV">Antoni（溫暖親切）</option>
+                            <option value="TxGEqnHWrfWFTfGW9XjX">Josh（年輕陽光）</option>
+                            <option value="yoZ06aMxZJJ28mfd3POQ">Sam（成熟專業）</option>
+                            <option value="VR6AewLTigWG4xSOukaG">Arnold（渾厚有力）</option>
+                            <option value="pqHfZKP75CvOlQylNhV4">Bill（沉穩可靠）</option>
+                            <option value="nPczCjzI2devNBz1zQrb">Brian（友善熱情）</option>
+                            <option value="N2lVS1w4EtoT3dr4eOWO">Callum（英式紳士）</option>
+                        </optgroup>
+                        <optgroup label="🌟 特色">
+                            <option value="XB0fDUnXU5powFXDhCwa">Charlotte（英式優雅）</option>
+                            <option value="Xb7hH8MSUJpSbSDYk0k2">Alice（英式清新）</option>
+                            <option value="iP95p4xoKVk53GoZ742B">Chris（美式播報）</option>
+                            <option value="onwK4e9ZLuTAKqWW03F9">Daniel（英式沉穩）</option>
+                        </optgroup>
+                    </select>
                 </div>
 
                 <!-- 測試與儲存 -->
@@ -1893,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.1</span>
+                    <span style="color:var(--text-secondary);">Pro v5.2</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -1968,9 +2044,11 @@
             dailyGoal: 8,
             // 語音服務設定
             voiceService: 'web',        // 'web' | 'gemini' | 'elevenlabs'
-            voiceGender: 'female',      // 'male' | 'female'
+            voiceGender: 'female',      // 'male' | 'female' (Web Speech 用)
             geminiApiKey: '',
-            elevenlabsApiKey: ''
+            geminiVoice: 'Zephyr',      // Gemini 語音名稱
+            elevenlabsApiKey: '',
+            elevenlabsVoice: '21m00Tcm4TlvDq8ikWAM'  // ElevenLabs 語音 ID (Rachel)
         };
 
         let timerState = {
@@ -3670,8 +3748,9 @@
             }
             
             try {
-                // Gemini TTS API
-                const voiceName = settings.voiceGender === 'female' ? 'Aoede' : 'Charon';
+                // 使用選擇的語音
+                const voiceName = settings.geminiVoice || 'Zephyr';
+                console.log('🤖 Gemini 語音:', voiceName);
                 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${settings.geminiApiKey}`, {
                     method: 'POST',
@@ -3731,12 +3810,9 @@
             }
             
             try {
-                // ElevenLabs 預設中文語音 ID
-                // 女聲: Rachel (21m00Tcm4TlvDq8ikWAM) 或其他
-                // 男聲: Adam (pNInz6obpgDQGcFmaJgB)
-                const voiceId = settings.voiceGender === 'female' 
-                    ? '21m00Tcm4TlvDq8ikWAM'  // Rachel
-                    : 'pNInz6obpgDQGcFmaJgB'; // Adam
+                // 使用選擇的語音 ID
+                const voiceId = settings.elevenlabsVoice || '21m00Tcm4TlvDq8ikWAM';
+                console.log('🎭 ElevenLabs 語音 ID:', voiceId);
                 
                 const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
                     method: 'POST',
@@ -3793,7 +3869,8 @@
             document.getElementById('voiceServiceGemini').style.borderColor = service === 'gemini' ? 'var(--accent)' : 'var(--bg-tertiary)';
             document.getElementById('voiceServiceElevenLabs').style.borderColor = service === 'elevenlabs' ? 'var(--accent)' : 'var(--bg-tertiary)';
             
-            // 顯示/隱藏 API Key 輸入區
+            // 顯示/隱藏對應區塊
+            document.getElementById('webVoiceSection').style.display = service === 'web' ? 'flex' : 'none';
             document.getElementById('geminiKeySection').style.display = service === 'gemini' ? 'flex' : 'none';
             document.getElementById('elevenlabsKeySection').style.display = service === 'elevenlabs' ? 'flex' : 'none';
             
@@ -3812,16 +3889,26 @@
         
         function saveVoiceSettings() {
             settings.geminiApiKey = document.getElementById('geminiApiKey').value.trim();
+            settings.geminiVoice = document.getElementById('geminiVoice').value;
             settings.elevenlabsApiKey = document.getElementById('elevenlabsApiKey').value.trim();
+            settings.elevenlabsVoice = document.getElementById('elevenlabsVoice').value;
             saveSettings();
             showToast('✅ 語音設定已儲存');
         }
         
         function testVoiceService() {
-            const testText = `語音測試成功！目前使用 ${
-                settings.voiceService === 'web' ? 'Web Speech' :
-                settings.voiceService === 'gemini' ? 'Google Gemini' : 'ElevenLabs'
-            } ${settings.voiceGender === 'female' ? '女聲' : '男聲'}。今天已完成 ${stats.todayCount} 個番茄。`;
+            let voiceInfo = '';
+            if (settings.voiceService === 'web') {
+                voiceInfo = `Web Speech ${settings.voiceGender === 'female' ? '女聲' : '男聲'}`;
+            } else if (settings.voiceService === 'gemini') {
+                voiceInfo = `Gemini ${settings.geminiVoice}`;
+            } else {
+                const voiceSelect = document.getElementById('elevenlabsVoice');
+                const selectedOption = voiceSelect.options[voiceSelect.selectedIndex];
+                voiceInfo = `ElevenLabs ${selectedOption.text.split('（')[0]}`;
+            }
+            
+            const testText = `語音測試成功！目前使用 ${voiceInfo}。今天已完成 ${stats.todayCount} 個番茄。`;
             
             showToast('🎙️ 測試語音中...');
             speakForce(testText);
@@ -4183,7 +4270,9 @@
             setVoiceService(settings.voiceService || 'web');
             setVoiceGender(settings.voiceGender || 'female');
             document.getElementById('geminiApiKey').value = settings.geminiApiKey || '';
+            document.getElementById('geminiVoice').value = settings.geminiVoice || 'Zephyr';
             document.getElementById('elevenlabsApiKey').value = settings.elevenlabsApiKey || '';
+            document.getElementById('elevenlabsVoice').value = settings.elevenlabsVoice || '21m00Tcm4TlvDq8ikWAM';
 
             // 更新計時器
             timerState.timeLeft = settings.workDuration * 60;
