@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.3</div>
+        <div class="splash-version">Pro v5.3.1</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.3</span>
+                    <span style="color:var(--text-secondary);">Pro v5.3.1</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -2262,6 +2262,9 @@
             timerState.endTime = Date.now() + timerState.timeLeft * 1000;
             updateStartButton();
             
+            // 🗣️ 用戶互動時初始化語音引擎（iOS 需要）
+            initSpeechOnUserAction();
+            
             // 螢幕長亮模式
             handleWakeLockOnTimerStart();
             
@@ -2279,6 +2282,30 @@
                     handleTimerComplete();
                 }
             }, 1000);
+        }
+        
+        // 用戶互動時初始化語音引擎（解決 iOS Safari 限制）
+        function initSpeechOnUserAction() {
+            if (!('speechSynthesis' in window)) return;
+            
+            try {
+                console.log('🗣️ 初始化語音引擎');
+                
+                // 取消之前的語音
+                speechSynthesis.cancel();
+                
+                // 播放一個空白語音來解鎖
+                const unlock = new SpeechSynthesisUtterance('');
+                unlock.volume = 0;
+                speechSynthesis.speak(unlock);
+                
+                // 預載語音列表
+                speechSynthesis.getVoices();
+                
+                console.log('🗣️ 語音引擎已初始化');
+            } catch (e) {
+                console.log('🗣️ 語音引擎初始化失敗:', e);
+            }
         }
 
         function pauseTimer() {
@@ -2359,13 +2386,17 @@
                 sendNotification('🍅 工作完成！', `今日 ${stats.todayCount}/${settings.dailyGoal} 個番茄`);
                 
                 // 確保語音播放（延遲一點讓 UI 先更新）
+                console.log('🔔 工作完成，準備播放語音');
+                showToast('🍅 工作完成！準備播放語音...');
+                
                 setTimeout(() => {
                     console.log('⏰ 觸發工作完成語音和 LINE');
+                    console.log('⏰ 語音服務:', settings.voiceService);
                     speakWorkComplete();
-                }, 100);
+                }, 300);
                 
                 if (!skipSound) {
-                    setTimeout(() => playSound(), 600); // 語音後播音效
+                    setTimeout(() => playSound(), 800); // 語音後播音效
                 }
 
                 // 判斷是否長休息
@@ -3616,6 +3647,8 @@
 
         // 豐富的完成語音（強制播放，不受語音開關限制）
         function speakWorkComplete() {
+            console.log('🗣️ speakWorkComplete 被調用');
+            
             const remaining = settings.dailyGoal - stats.todayCount;
             let message = `恭喜完成一個番茄！今天已完成 ${stats.todayCount} 個`;
             
@@ -3637,7 +3670,16 @@
             ];
             message += encouragements[Math.floor(Math.random() * encouragements.length)];
             
-            console.log('🗣️ 播放工作完成語音:', message);
+            console.log('🗣️ 語音訊息:', message);
+            
+            // 先嘗試喚醒語音引擎
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                }
+            }
+            
             speakForce(message);
             
             // 同步發送 LINE 通知
@@ -3757,6 +3799,7 @@
         // Web Speech API（免費，內建）
         function speakWithWebAPI(text) {
             console.log('🌐 speakWithWebAPI 被調用');
+            console.log('🌐 文字:', text);
             
             if (!('speechSynthesis' in window)) {
                 console.log('❌ 此瀏覽器不支援 Web Speech API');
@@ -3765,72 +3808,97 @@
             }
             
             // 先喚醒語音引擎
-            if (speechSynthesis.paused) {
-                speechSynthesis.resume();
+            try {
+                if (speechSynthesis.paused) {
+                    console.log('🌐 語音引擎暫停中，嘗試恢復');
+                    speechSynthesis.resume();
+                }
+                speechSynthesis.cancel();
+            } catch (e) {
+                console.log('🌐 喚醒語音引擎失敗:', e);
             }
-            speechSynthesis.cancel();
             
             const doSpeak = () => {
                 console.log('🌐 doSpeak 執行');
                 
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 0.9;
-                utterance.volume = 1.0;
-                
-                // 根據性別選擇語音
-                const voices = speechSynthesis.getVoices();
-                console.log('🌐 可用語音數:', voices.length);
-                
-                const zhVoices = voices.filter(v => 
-                    v.lang.includes('zh-TW') || v.lang.includes('zh_TW') ||
-                    v.lang.includes('zh-CN') || v.lang.includes('zh_CN') || v.lang.includes('cmn')
-                );
-                console.log('🌐 中文語音數:', zhVoices.length);
-                
-                if (zhVoices.length > 0) {
-                    // 嘗試根據性別選擇
-                    const preferredVoice = zhVoices.find(v => {
-                        const name = v.name.toLowerCase();
-                        if (settings.voiceGender === 'female') {
-                            return name.includes('female') || name.includes('女') || name.includes('mei') || name.includes('ting');
-                        } else {
-                            return name.includes('male') || name.includes('男') || !name.includes('female');
+                try {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-TW';
+                    utterance.rate = 0.9;
+                    utterance.volume = 1.0;
+                    
+                    // 根據性別選擇語音
+                    const voices = speechSynthesis.getVoices();
+                    console.log('🌐 可用語音數:', voices.length);
+                    
+                    if (voices.length > 0) {
+                        const zhVoices = voices.filter(v => 
+                            v.lang.includes('zh-TW') || v.lang.includes('zh_TW') ||
+                            v.lang.includes('zh-CN') || v.lang.includes('zh_CN') || v.lang.includes('cmn')
+                        );
+                        console.log('🌐 中文語音數:', zhVoices.length);
+                        
+                        if (zhVoices.length > 0) {
+                            const preferredVoice = zhVoices.find(v => {
+                                const name = v.name.toLowerCase();
+                                if (settings.voiceGender === 'female') {
+                                    return name.includes('female') || name.includes('女') || name.includes('mei') || name.includes('ting');
+                                } else {
+                                    return name.includes('male') || name.includes('男') || !name.includes('female');
+                                }
+                            }) || zhVoices[0];
+                            utterance.voice = preferredVoice;
+                            console.log('🌐 使用語音:', preferredVoice.name);
                         }
-                    }) || zhVoices[0];
-                    utterance.voice = preferredVoice;
-                    console.log('🌐 使用語音:', preferredVoice.name);
+                    }
+                    
+                    utterance.onstart = () => {
+                        console.log('🗣️ Web Speech 開始播放');
+                        showToast('🗣️ 語音播放中');
+                    };
+                    utterance.onerror = (e) => {
+                        console.log('🗣️ Web Speech 錯誤:', e.error);
+                        showToast('❌ 語音錯誤: ' + e.error);
+                    };
+                    utterance.onend = () => {
+                        console.log('🗣️ Web Speech 播放完成');
+                    };
+                    
+                    speechSynthesis.speak(utterance);
+                    console.log('🌐 已排入語音佇列');
+                    
+                    // 檢查是否真的在播放
+                    setTimeout(() => {
+                        if (speechSynthesis.speaking) {
+                            console.log('🌐 確認：語音正在播放');
+                        } else if (speechSynthesis.pending) {
+                            console.log('🌐 確認：語音在佇列中');
+                        } else {
+                            console.log('🌐 警告：語音可能沒有播放，嘗試重試');
+                            // 重試一次
+                            speechSynthesis.speak(utterance);
+                        }
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('🌐 doSpeak 錯誤:', error);
+                    showToast('❌ 語音播放失敗');
                 }
-                
-                utterance.onstart = () => {
-                    console.log('🗣️ Web Speech 開始播放');
-                    showToast('🗣️ 語音播放中');
-                };
-                utterance.onerror = (e) => {
-                    console.log('🗣️ Web Speech 錯誤:', e.error);
-                    showToast('❌ 語音錯誤: ' + e.error);
-                };
-                utterance.onend = () => {
-                    console.log('🗣️ Web Speech 播放完成');
-                };
-                
-                speechSynthesis.speak(utterance);
-                console.log('🌐 已排入語音佇列');
             };
             
             const voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
                 console.log('🌐 等待語音載入...');
-                // 等待語音載入
                 speechSynthesis.addEventListener('voiceschanged', () => {
                     console.log('🌐 語音已載入');
                     doSpeak();
                 }, { once: true });
-                // 觸發載入
                 speechSynthesis.getVoices();
                 // 如果 1 秒後還沒載入，強制執行
                 setTimeout(() => {
-                    if (speechSynthesis.getVoices().length > 0) {
+                    const v = speechSynthesis.getVoices();
+                    console.log('🌐 1秒後檢查，語音數:', v.length);
+                    if (v.length > 0 || true) {
                         doSpeak();
                     }
                 }, 1000);
