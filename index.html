@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.3.1</div>
+        <div class="splash-version">Pro v5.3.2</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.3.1</span>
+                    <span style="color:var(--text-secondary);">Pro v5.3.2</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -2277,6 +2277,15 @@
                 const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
                 timerState.timeLeft = remaining;
                 updateTimerDisplay();
+                
+                // 🗣️ 倒數 3 秒時預先喚醒語音引擎
+                if (remaining === 3 && 'speechSynthesis' in window) {
+                    console.log('🗣️ 預先喚醒語音引擎');
+                    speechSynthesis.cancel();
+                    const warmup = new SpeechSynthesisUtterance('');
+                    warmup.volume = 0;
+                    speechSynthesis.speak(warmup);
+                }
 
                 if (timerState.timeLeft <= 0) {
                     handleTimerComplete();
@@ -2285,24 +2294,38 @@
         }
         
         // 用戶互動時初始化語音引擎（解決 iOS Safari 限制）
+        let speechUnlocked = false;
+        
         function initSpeechOnUserAction() {
             if (!('speechSynthesis' in window)) return;
+            if (speechUnlocked) return;
             
             try {
-                console.log('🗣️ 初始化語音引擎');
+                console.log('🗣️ 初始化語音引擎（iOS 解鎖）');
                 
                 // 取消之前的語音
                 speechSynthesis.cancel();
                 
-                // 播放一個空白語音來解鎖
-                const unlock = new SpeechSynthesisUtterance('');
-                unlock.volume = 0;
+                // 播放一個有內容的語音來解鎖（iOS 需要）
+                const unlock = new SpeechSynthesisUtterance('。');
+                unlock.volume = 0.01;  // 極小音量
+                unlock.rate = 10;      // 最快速度
+                unlock.lang = 'zh-TW';
+                
+                unlock.onend = () => {
+                    console.log('🗣️ 語音引擎解鎖成功');
+                    speechUnlocked = true;
+                };
+                unlock.onerror = (e) => {
+                    console.log('🗣️ 語音引擎解鎖失敗:', e.error);
+                };
+                
                 speechSynthesis.speak(unlock);
                 
                 // 預載語音列表
                 speechSynthesis.getVoices();
                 
-                console.log('🗣️ 語音引擎已初始化');
+                console.log('🗣️ 語音引擎初始化完成');
             } catch (e) {
                 console.log('🗣️ 語音引擎初始化失敗:', e);
             }
@@ -2382,21 +2405,15 @@
                     updateTodoList();
                 }
 
-                // 🗣️ 語音優先（更可靠），音效延遲播放
+                // 🗣️ 語音 + LINE 通知
                 sendNotification('🍅 工作完成！', `今日 ${stats.todayCount}/${settings.dailyGoal} 個番茄`);
                 
-                // 確保語音播放（延遲一點讓 UI 先更新）
-                console.log('🔔 工作完成，準備播放語音');
-                showToast('🍅 工作完成！準備播放語音...');
-                
-                setTimeout(() => {
-                    console.log('⏰ 觸發工作完成語音和 LINE');
-                    console.log('⏰ 語音服務:', settings.voiceService);
-                    speakWorkComplete();
-                }, 300);
+                // 直接調用語音（不用 setTimeout，iOS 需要）
+                console.log('🔔 工作完成，播放語音');
+                speakWorkComplete();
                 
                 if (!skipSound) {
-                    setTimeout(() => playSound(), 800); // 語音後播音效
+                    playSound();
                 }
 
                 // 判斷是否長休息
@@ -2437,16 +2454,13 @@
                     timerState.totalTime = settings.workDuration * 60;
                 }
 
-                // 🗣️ 語音優先，音效延遲
+                // 🗣️ 語音 + 音效
                 sendNotification('☕ 休息結束！', '準備開始工作');
                 
-                // 確保語音播放（延遲一點讓 UI 先更新）
-                setTimeout(() => {
-                    console.log('⏰ 觸發休息結束語音和 LINE');
-                    speakRestComplete();
-                }, 100);
-                
-                setTimeout(() => playShortBeep(), 600);
+                // 直接調用語音（不用 setTimeout，iOS 需要）
+                console.log('🔔 休息結束，播放語音');
+                speakRestComplete();
+                playShortBeep();
                 
                 hideRestModal();
                 updateTimerStyle();
@@ -3660,34 +3674,64 @@
                 message += `，超越目標 ${Math.abs(remaining)} 個，太棒了！`;
             }
             
-            // 加入鼓勵語
-            const encouragements = [
-                '繼續加油！',
-                '休息一下吧！',
-                '做得好！',
-                '保持專注！',
-                '你很棒！'
-            ];
+            const encouragements = ['繼續加油！', '休息一下吧！', '做得好！', '保持專注！', '你很棒！'];
             message += encouragements[Math.floor(Math.random() * encouragements.length)];
             
             console.log('🗣️ 語音訊息:', message);
             
-            // 先嘗試喚醒語音引擎
-            if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                if (speechSynthesis.paused) {
-                    speechSynthesis.resume();
-                }
-            }
-            
+            // iOS Safari 特殊處理：先嘗試直接播放
             speakForce(message);
             
             // 同步發送 LINE 通知
             sendLineNotifyNow('work');
+            
+            // 如果語音沒播放，顯示提示讓用戶手動觸發
+            setTimeout(() => {
+                if ('speechSynthesis' in window && !speechSynthesis.speaking) {
+                    console.log('🗣️ 語音可能未播放，顯示手動按鈕');
+                    showSpeakButton(message);
+                }
+            }, 1000);
+        }
+        
+        // 顯示手動播放語音按鈕（iOS 備用方案）
+        function showSpeakButton(message) {
+            // 檢查是否已有按鈕
+            if (document.getElementById('manualSpeakBtn')) return;
+            
+            const btn = document.createElement('button');
+            btn.id = 'manualSpeakBtn';
+            btn.innerHTML = '🗣️ 點擊播放語音';
+            btn.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 15px 30px;
+                background: var(--accent, #007AFF);
+                color: white;
+                border: none;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                cursor: pointer;
+            `;
+            btn.onclick = () => {
+                speakForce(message);
+                btn.remove();
+            };
+            document.body.appendChild(btn);
+            
+            // 5 秒後自動移除
+            setTimeout(() => btn.remove(), 5000);
         }
 
         // 休息結束語音（強制播放）
         function speakRestComplete() {
+            console.log('🗣️ speakRestComplete 被調用');
+            
             const remaining = settings.dailyGoal - stats.todayCount;
             let message = '休息結束，準備開始工作';
             
@@ -3697,11 +3741,18 @@
                 message += `。今日目標已達成，繼續挑戰自己吧`;
             }
             
-            console.log('🗣️ 播放休息結束語音:', message);
+            console.log('🗣️ 語音訊息:', message);
             speakForce(message);
             
             // 同步發送 LINE 通知
             sendLineNotifyNow('rest');
+            
+            // iOS 備用方案
+            setTimeout(() => {
+                if ('speechSynthesis' in window && !speechSynthesis.speaking) {
+                    showSpeakButton(message);
+                }
+            }, 1000);
         }
         
         // 直接發送 LINE 通知（不透過 GAS 觸發器）
