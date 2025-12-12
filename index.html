@@ -1,0 +1,4601 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>🍅 番茄鐘 Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* ========== 主題變數 ========== */
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #2c2c2e;
+            --bg-card: #1c1c1e;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #636366;
+            --accent-red: #ff453a;
+            --accent-orange: #ff9f0a;
+            --accent-green: #30d158;
+            --accent-blue: #0a84ff;
+            --accent-cyan: #64d2ff;
+            --accent-purple: #bf5af2;
+            --accent-pink: #ff375f;
+            --border: #38383a;
+            --separator: #38383a;
+        }
+
+        /* 淺色主題 */
+        [data-theme="light"] {
+            --bg-primary: #f2f2f7;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e5ea;
+            --bg-card: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #6c6c70;
+            --text-tertiary: #8e8e93;
+            --border: #c6c6c8;
+            --separator: #c6c6c8;
+        }
+
+        /* 森林主題 */
+        [data-theme="forest"] {
+            --bg-primary: #0d1f0d;
+            --bg-secondary: #1a2f1a;
+            --bg-tertiary: #2a3f2a;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+        }
+
+        /* 海洋主題 */
+        [data-theme="ocean"] {
+            --bg-primary: #0c1929;
+            --bg-secondary: #132f4c;
+            --bg-tertiary: #1e4976;
+            --accent-blue: #5ea9ff;
+            --accent-cyan: #80deea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ========== 開機動畫 ========== */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tech-grid {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background-image: 
+                linear-gradient(rgba(100, 210, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100, 210, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .glow-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            animation: ringRotate 3s linear infinite;
+        }
+
+        .glow-ring:nth-child(1) {
+            width: 180px;
+            height: 180px;
+            border-top-color: #64d2ff;
+            border-right-color: #64d2ff;
+            animation-duration: 3s;
+        }
+
+        .glow-ring:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            border-bottom-color: #bf5af2;
+            border-left-color: #bf5af2;
+            animation-duration: 2.5s;
+            animation-direction: reverse;
+        }
+
+        .glow-ring:nth-child(3) {
+            width: 120px;
+            height: 120px;
+            border-top-color: #30d158;
+            animation-duration: 2s;
+        }
+
+        @keyframes ringRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .splash-text {
+            font-size: 48px;
+            font-weight: 700;
+            color: #64d2ff;
+            text-shadow: 0 0 30px rgba(100, 210, 255, 0.8);
+            animation: textGlow 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes textGlow {
+            0%, 100% { text-shadow: 0 0 30px rgba(100, 210, 255, 0.8); }
+            50% { text-shadow: 0 0 60px rgba(100, 210, 255, 1), 0 0 100px rgba(191, 90, 242, 0.5); }
+        }
+
+        .splash-subtitle {
+            margin-top: 30px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        .splash-version {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--accent-cyan);
+        }
+
+        /* ========== 主容器 ========== */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding-bottom: 100px;
+            min-height: 100vh;
+        }
+
+        /* ========== 狀態列 ========== */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-time {
+            color: var(--text-primary);
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        /* ========== 導航列 ========== */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 16px;
+        }
+
+        .nav-title {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background: var(--accent-blue);
+        }
+
+        /* ========== 頁面 ========== */
+        .page {
+            display: none;
+            padding: 0 20px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ========== 模式切換 ========== */
+        .mode-switcher {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        /* ========== 計時器 ========== */
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .timer-ring {
+            position: relative;
+            width: 280px;
+            height: 280px;
+        }
+
+        .timer-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-bg {
+            fill: none;
+            stroke: var(--bg-tertiary);
+            stroke-width: 8;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: var(--accent-green);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 816;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 0.5s ease, stroke 0.3s;
+            filter: drop-shadow(0 0 10px var(--accent-green));
+        }
+
+        .timer-progress.rest {
+            stroke: var(--accent-cyan);
+            filter: drop-shadow(0 0 10px var(--accent-cyan));
+        }
+
+        .timer-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .timer-emoji {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .timer-display {
+            font-size: 56px;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -2px;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* ========== 控制按鈕 ========== */
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .start-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-green);
+            color: #000;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(48, 209, 88, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(48, 209, 88, 0.6);
+        }
+
+        .start-btn.running {
+            background: var(--accent-orange);
+            box-shadow: 0 4px 20px rgba(255, 159, 10, 0.4);
+        }
+
+        .start-btn.rest-mode {
+            background: var(--accent-cyan);
+            box-shadow: 0 4px 20px rgba(100, 210, 255, 0.4);
+        }
+
+        .start-btn-text {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* ========== 番茄計數 ========== */
+        .pomodoro-count {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .pomodoro-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            transition: all 0.3s;
+        }
+
+        .pomodoro-dot.completed {
+            background: var(--accent-red);
+            box-shadow: 0 0 10px var(--accent-red);
+        }
+
+        .pomodoro-dot.long-break {
+            background: var(--accent-purple);
+        }
+
+        /* ========== 統計卡片 ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ========== 待辦事項 ========== */
+        .todo-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .todo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .todo-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .todo-add-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-blue);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .todo-input-container {
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        .todo-input-container.show {
+            display: flex;
+            gap: 8px;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .todo-submit {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent-green);
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .todo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .todo-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .todo-item.active {
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: var(--text-tertiary);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .todo-item.completed .todo-checkbox {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #000;
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .todo-pomodoros {
+            font-size: 12px;
+            color: var(--accent-red);
+        }
+
+        .todo-delete {
+            opacity: 0;
+            color: var(--accent-red);
+            cursor: pointer;
+        }
+
+        .todo-item:hover .todo-delete {
+            opacity: 1;
+        }
+
+        /* ========== 圖表 ========== */
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chart-tab {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .chart-tab.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 150px;
+        }
+
+        .chart-bars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 120px;
+            padding: 0 10px;
+        }
+
+        .chart-bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .chart-bar {
+            width: 24px;
+            background: linear-gradient(to top, var(--accent-green), var(--accent-cyan));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            transition: height 0.5s;
+        }
+
+        .chart-bar-label {
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        /* ========== 白噪音 ========== */
+        .ambient-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .ambient-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .ambient-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .ambient-btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 12px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .ambient-btn span {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .ambient-btn.active {
+            background: var(--accent-blue);
+            transform: scale(1.05);
+        }
+
+        .ambient-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        /* ========== 休息活動 ========== */
+        .rest-activities {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .rest-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .rest-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .rest-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+
+        .rest-item:hover {
+            transform: scale(1.05);
+        }
+
+        .rest-item-icon {
+            font-size: 24px;
+        }
+
+        .rest-item-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* ========== 設定群組 ========== */
+        .settings-group {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .setting-icon.red { background: var(--accent-red); }
+        .setting-icon.orange { background: var(--accent-orange); }
+        .setting-icon.green { background: var(--accent-green); }
+        .setting-icon.blue { background: var(--accent-blue); }
+        .setting-icon.cyan { background: var(--accent-cyan); }
+        .setting-icon.purple { background: var(--accent-purple); }
+
+        .setting-label {
+            font-size: 15px;
+        }
+
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-input {
+            width: 60px;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 15px;
+            text-align: center;
+        }
+
+        /* iOS 開關 */
+        .ios-switch {
+            width: 51px;
+            height: 31px;
+            background: var(--bg-tertiary);
+            border-radius: 15.5px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .ios-switch::after {
+            content: '';
+            position: absolute;
+            width: 27px;
+            height: 27px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .ios-switch.active {
+            background: var(--accent-green);
+        }
+
+        .ios-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        /* ========== 主題選擇器 ========== */
+        .theme-selector {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .theme-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-option.active {
+            border-color: var(--accent-blue);
+            transform: scale(1.1);
+        }
+
+        .theme-option.dark { background: linear-gradient(135deg, #000 50%, #1c1c1e 50%); }
+        .theme-option.light { background: linear-gradient(135deg, #f2f2f7 50%, #fff 50%); }
+        .theme-option.forest { background: linear-gradient(135deg, #0d1f0d 50%, #1a2f1a 50%); }
+        .theme-option.ocean { background: linear-gradient(135deg, #0c1929 50%, #132f4c 50%); }
+
+        /* ========== 鐘聲選擇器 ========== */
+        .chime-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .chime-option {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chime-option.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        /* ========== 底部導航 ========== */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 4px 12px;
+            transition: color 0.2s;
+        }
+
+        .tab-item.active {
+            color: var(--accent-blue);
+        }
+
+        .tab-icon {
+            font-size: 22px;
+        }
+
+        /* ========== 休息彈窗 ========== */
+        .rest-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .rest-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .rest-modal-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .rest-modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .rest-modal-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .rest-modal-timer {
+            font-size: 72px;
+            font-weight: 200;
+            color: var(--accent-cyan);
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 30px;
+        }
+
+        .rest-modal-activity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .rest-modal-activity-icon {
+            font-size: 32px;
+        }
+
+        .rest-modal-activity-text {
+            font-size: 16px;
+        }
+
+        /* 呼吸動畫 */
+        .breathing-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-cyan), transparent);
+            animation: breathe 4s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(0.8); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .breathing-text {
+            font-size: 18px;
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+        }
+
+        .rest-modal-btn {
+            padding: 16px 40px;
+            border: none;
+            border-radius: 30px;
+            background: var(--accent-green);
+            color: #000;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .rest-modal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ========== 全螢幕模式 ========== */
+        .fullscreen-mode {
+            background: var(--bg-primary) !important;
+        }
+
+        .fullscreen-mode .app-container {
+            max-width: 100%;
+            height: 100vh;
+            height: 100dvh; /* iOS Safari 動態視窗高度 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 !important;
+        }
+
+        .fullscreen-mode .page {
+            display: none !important;
+        }
+
+        .fullscreen-mode .page.active {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 0 !important;
+        }
+
+        .fullscreen-mode .tab-bar,
+        .fullscreen-mode .nav-bar,
+        .fullscreen-mode .status-bar,
+        .fullscreen-mode .stats-grid,
+        .fullscreen-mode .todo-section,
+        .fullscreen-mode .ambient-section,
+        .fullscreen-mode .rest-activities,
+        .fullscreen-mode .mode-switcher,
+        .fullscreen-mode .controls,
+        .fullscreen-mode .pomodoro-counter {
+            display: none !important;
+        }
+
+        .fullscreen-mode .timer-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-mode .timer-ring {
+            width: min(400px, 80vw);
+            height: min(400px, 80vw);
+            cursor: pointer;
+        }
+
+        .fullscreen-mode .timer-display {
+            font-size: min(100px, 15vw);
+        }
+
+        .fullscreen-mode .timer-emoji {
+            font-size: min(60px, 10vw);
+        }
+
+        .fullscreen-mode .fullscreen-btn {
+            opacity: 0.3;
+        }
+
+        .fullscreen-mode .fullscreen-btn:hover {
+            opacity: 1;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* ========== Toast ========== */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1001;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ========== 快捷鍵提示 ========== */
+        .shortcuts-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .shortcuts-hint {
+                display: block;
+            }
+        }
+
+        /* ========== 歷史紀錄 ========== */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .history-date {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .history-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .history-stat {
+            text-align: right;
+        }
+
+        .history-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .history-stat-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        /* ========== 響應式 ========== */
+        @media (max-width: 380px) {
+            .timer-ring {
+                width: 240px;
+                height: 240px;
+            }
+            .timer-display {
+                font-size: 48px;
+            }
+            .ambient-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 開機動畫 -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-container">
+            <div class="tech-grid"></div>
+            <div class="glow-ring"></div>
+            <div class="glow-ring"></div>
+            <div class="glow-ring"></div>
+            <div class="splash-text">休</div>
+        </div>
+        <div class="splash-subtitle">專注工作，適時休息</div>
+        <div class="splash-version">Pro v5.1</div>
+    </div>
+
+    <!-- 全螢幕按鈕 -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()" title="全螢幕">⛶</button>
+
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 計時器頁 -->
+        <div class="page active" id="page-timer">
+            <div class="status-bar">
+                <span class="status-time" id="statusTime">00:00</span>
+                <div class="status-icons">
+                    <span id="soundBtn" onclick="toggleSound()">🔔</span>
+                    <span>📶</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+
+            <div class="nav-bar">
+                <div class="nav-title">番茄鐘</div>
+                <div class="nav-actions">
+                    <button class="nav-btn" onclick="showShortcuts()" title="快捷鍵">⌨️</button>
+                    <button class="nav-btn" onclick="exportStats()" title="匯出">📤</button>
+                </div>
+            </div>
+
+            <!-- 模式切換 -->
+            <div class="mode-switcher">
+                <button class="mode-btn active" onclick="setMode('countdown')">⏱️ 倒數模式</button>
+                <button class="mode-btn" onclick="setMode('hourly')">🕐 整點模式</button>
+                <button class="mode-btn" onclick="setMode('classroom')">🏫 課堂模式</button>
+            </div>
+
+            <!-- 計時器 -->
+            <div class="timer-container">
+                <div class="timer-ring" onclick="exitFullscreenOnClick()">
+                    <svg viewBox="0 0 280 280">
+                        <circle class="timer-bg" cx="140" cy="140" r="130"></circle>
+                        <circle class="timer-progress" id="timerProgress" cx="140" cy="140" r="130"></circle>
+                    </svg>
+                    <div class="timer-content">
+                        <div class="timer-emoji" id="timerEmoji">🍅</div>
+                        <div class="timer-display" id="timerDisplay">25:00</div>
+                        <div class="timer-label" id="timerLabel">工作時間</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" onclick="resetTimer()" title="重置">↻</button>
+                    <button class="start-btn" id="startBtn" onclick="toggleTimer()">
+                        <span id="startIcon">▶</span>
+                        <span class="start-btn-text" id="startText">開始</span>
+                    </button>
+                    <button class="control-btn" onclick="skipPhase()" title="跳過">⏭</button>
+                </div>
+
+                <!-- 番茄計數（長休息指示） -->
+                <div class="pomodoro-count" id="pomodoroCount">
+                    <div class="pomodoro-dot"></div>
+                    <div class="pomodoro-dot"></div>
+                    <div class="pomodoro-dot"></div>
+                    <div class="pomodoro-dot"></div>
+                </div>
+            </div>
+
+            <!-- 每日目標 -->
+            <div class="daily-goal-section" style="padding:0 20px 15px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:13px;color:var(--text-secondary);">🎯 每日目標</span>
+                    <span style="font-size:13px;font-weight:600;" id="goalProgress">0/8</span>
+                </div>
+                <div style="height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+                    <div id="goalProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#30d158,#34c759);border-radius:4px;transition:width 0.5s ease;"></div>
+                </div>
+            </div>
+
+            <!-- 統計 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="todayCount">0</div>
+                    <div class="stat-label">今日番茄</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="todayMinutes">0</div>
+                    <div class="stat-label">專注分鐘</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="streakDays">0</div>
+                    <div class="stat-label">連續天數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="bestStreak">0</div>
+                    <div class="stat-label">最佳紀錄</div>
+                </div>
+            </div>
+
+            <!-- 待辦事項 -->
+            <div class="todo-section">
+                <div class="todo-header">
+                    <span class="todo-title">📝 待辦事項</span>
+                    <button class="todo-add-btn" onclick="toggleTodoInput()">+</button>
+                </div>
+                <div class="todo-input-container" id="todoInputContainer">
+                    <input type="text" class="todo-input" id="todoInput" placeholder="輸入任務名稱..." onkeypress="if(event.key==='Enter')addTodo()">
+                    <button class="todo-submit" onclick="addTodo()">新增</button>
+                </div>
+                <div class="todo-list" id="todoList">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 白噪音 -->
+            <div class="ambient-section">
+                <div class="ambient-title">🎵 白噪音</div>
+                <div class="ambient-grid">
+                    <button class="ambient-btn" onclick="toggleAmbient('rain')">
+                        🌧️<span>雨聲</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('cafe')">
+                        ☕<span>咖啡廳</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('forest')">
+                        🌲<span>森林</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('ocean')">
+                        🌊<span>海浪</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('fire')">
+                        🔥<span>壁爐</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('wind')">
+                        💨<span>微風</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('night')">
+                        🌙<span>夜晚</span>
+                    </button>
+                    <button class="ambient-btn" onclick="toggleAmbient('none')">
+                        🔇<span>關閉</span>
+                    </button>
+                </div>
+                <div class="volume-control">
+                    <span>🔈</span>
+                    <input type="range" class="volume-slider" id="ambientVolume" min="0" max="100" value="50" onchange="setAmbientVolume(this.value)">
+                    <span>🔊</span>
+                </div>
+            </div>
+
+            <!-- 休息活動提示 -->
+            <div class="rest-activities">
+                <div class="rest-title">💡 休息時可以做...</div>
+                <div class="rest-grid">
+                    <div class="rest-item">
+                        <div class="rest-item-icon">🚶</div>
+                        <div class="rest-item-text">站起來走走</div>
+                    </div>
+                    <div class="rest-item">
+                        <div class="rest-item-icon">💧</div>
+                        <div class="rest-item-text">喝杯水</div>
+                    </div>
+                    <div class="rest-item">
+                        <div class="rest-item-icon">👀</div>
+                        <div class="rest-item-text">看看遠方</div>
+                    </div>
+                    <div class="rest-item">
+                        <div class="rest-item-icon">🧘</div>
+                        <div class="rest-item-text">伸展動作</div>
+                    </div>
+                    <div class="rest-item">
+                        <div class="rest-item-icon">🌬️</div>
+                        <div class="rest-item-text">深呼吸</div>
+                    </div>
+                    <div class="rest-item">
+                        <div class="rest-item-icon">☕</div>
+                        <div class="rest-item-text">泡杯茶</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 統計頁 -->
+        <div class="page" id="page-stats">
+            <div class="status-bar">
+                <span class="status-time" id="statusTime2">00:00</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="nav-bar">
+                <div class="nav-title">統計</div>
+            </div>
+
+            <!-- 圖表 -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">📊 專注時間</span>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" onclick="setChartView('week')">週</button>
+                        <button class="chart-tab" onclick="setChartView('month')">月</button>
+                    </div>
+                </div>
+                <div class="chart-bars" id="chartBars">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 歷史紀錄 -->
+            <div class="settings-group">
+                <div class="settings-header">📅 歷史紀錄</div>
+                <div id="historyList">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 番茄森林 -->
+            <div class="settings-group">
+                <div class="settings-header">🌳 番茄森林</div>
+                <div id="forestContainer" style="background:linear-gradient(180deg,#87ceeb 0%,#98d8c8 50%,#7cb342 100%);border-radius:16px;padding:20px;min-height:120px;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:5px;">
+                    <!-- 動態生成樹木 -->
+                </div>
+                <div style="text-align:center;padding:10px;color:var(--text-secondary);font-size:12px;">
+                    <span id="forestStats">累計 0 個番茄，種了 0 棵樹</span>
+                </div>
+            </div>
+
+            <!-- 成就系統 -->
+            <div class="settings-group">
+                <div class="settings-header">🏆 成就（<span id="achievementCount">0</span>/14）</div>
+                <div id="achievementList" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 資料匯出 -->
+            <div class="settings-group">
+                <div class="settings-header">💾 資料管理</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button onclick="exportData('csv')" style="flex:1;padding:12px;background:var(--bg-tertiary);color:var(--text-primary);border:none;border-radius:10px;font-size:13px;cursor:pointer;">📊 匯出 CSV</button>
+                    <button onclick="exportData('json')" style="flex:1;padding:12px;background:var(--bg-tertiary);color:var(--text-primary);border:none;border-radius:10px;font-size:13px;cursor:pointer;">📁 匯出 JSON</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 設定頁 -->
+        <div class="page" id="page-settings">
+            <div class="status-bar">
+                <span class="status-time" id="statusTime3">00:00</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="nav-bar">
+                <div class="nav-title">設定</div>
+            </div>
+
+            <!-- 時間設定 -->
+            <div class="settings-group">
+                <div class="settings-header">⏱️ 時間設定</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon red">🍅</div>
+                        <span class="setting-label">工作時間</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="workDuration" value="25" min="1" max="120">
+                        <span>分鐘</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon cyan">☕</div>
+                        <span class="setting-label">短休息</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="shortBreak" value="5" min="1" max="30">
+                        <span>分鐘</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">🌴</div>
+                        <span class="setting-label">長休息</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="longBreak" value="15" min="5" max="60">
+                        <span>分鐘</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon orange">🔄</div>
+                        <span class="setting-label">長休息間隔</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="longBreakInterval" value="4" min="2" max="10">
+                        <span>個番茄</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon blue">🕐</div>
+                        <span class="setting-label">整點提醒</span>
+                    </div>
+                    <div class="setting-value">
+                        <span>每小時</span>
+                        <input type="number" class="setting-input" id="hourlyMinute" value="55" min="0" max="59">
+                        <span>分</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 課堂模式設定 -->
+            <div class="settings-group">
+                <div class="settings-header">🏫 課堂模式</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon green">📚</div>
+                        <span class="setting-label">上課時間</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="classTime" value="45" min="10" max="90">
+                        <span>分鐘</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon cyan">🎉</div>
+                        <span class="setting-label">下課時間</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="breakTime" value="10" min="5" max="30">
+                        <span>分鐘</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 通知設定 -->
+            <div class="settings-group">
+                <div class="settings-header">🔔 通知設定</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon blue">🔔</div>
+                        <span class="setting-label">瀏覽器通知</span>
+                    </div>
+                    <div class="ios-switch active" id="switchNotification" onclick="toggleSwitch('notification')"></div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon green">🔊</div>
+                        <span class="setting-label">音效提醒</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button onclick="testSound()" style="padding:6px 12px;background:var(--bg-tertiary);color:var(--text-primary);border:none;border-radius:8px;font-size:13px;cursor:pointer;">🔔 測試</button>
+                        <div class="ios-switch active" id="switchSound" onclick="toggleSwitch('sound')"></div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">🗣️</div>
+                        <span class="setting-label">語音播報</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button onclick="testSpeech()" style="padding:6px 12px;background:var(--bg-tertiary);color:var(--text-primary);border:none;border-radius:8px;font-size:13px;cursor:pointer;">🗣️ 測試</button>
+                        <div class="ios-switch" id="switchVoice" onclick="toggleSwitch('voice')"></div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon orange">📳</div>
+                        <span class="setting-label">震動提醒</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button onclick="testVibrate()" style="padding:6px 12px;background:var(--bg-tertiary);color:var(--text-primary);border:none;border-radius:8px;font-size:13px;cursor:pointer;">📳 測試</button>
+                        <div class="ios-switch active" id="switchVibrate" onclick="toggleSwitch('vibrate')"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 語音服務設定 -->
+            <div class="settings-group">
+                <div class="settings-header">🎙️ 語音服務設定</div>
+                
+                <!-- 語音服務選擇 -->
+                <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:10px;">
+                    <div class="setting-left">
+                        <div class="setting-icon blue">🔊</div>
+                        <span class="setting-label">語音服務</span>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="voice-service-btn active" id="voiceServiceWeb" onclick="setVoiceService('web')" style="flex:1;min-width:80px;padding:10px 8px;border-radius:10px;border:2px solid var(--accent);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;">
+                            <div style="font-size:18px;">🌐</div>
+                            <div style="font-size:11px;font-weight:600;margin-top:4px;">Web</div>
+                            <div style="font-size:9px;color:var(--text-secondary);">免費</div>
+                        </button>
+                        <button class="voice-service-btn" id="voiceServiceGemini" onclick="setVoiceService('gemini')" style="flex:1;min-width:80px;padding:10px 8px;border-radius:10px;border:2px solid var(--bg-tertiary);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;">
+                            <div style="font-size:18px;">🤖</div>
+                            <div style="font-size:11px;font-weight:600;margin-top:4px;">Gemini</div>
+                            <div style="font-size:9px;color:var(--text-secondary);">API Key</div>
+                        </button>
+                        <button class="voice-service-btn" id="voiceServiceElevenLabs" onclick="setVoiceService('elevenlabs')" style="flex:1;min-width:80px;padding:10px 8px;border-radius:10px;border:2px solid var(--bg-tertiary);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;">
+                            <div style="font-size:18px;">🎭</div>
+                            <div style="font-size:11px;font-weight:600;margin-top:4px;">ElevenLabs</div>
+                            <div style="font-size:9px;color:var(--text-secondary);">API Key</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 聲音選擇（男/女）-->
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon pink">👤</div>
+                        <span class="setting-label">聲音類型</span>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="voice-gender-btn active" id="voiceGenderFemale" onclick="setVoiceGender('female')" style="padding:8px 16px;border-radius:8px;border:2px solid var(--accent);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;">
+                            👩 女聲
+                        </button>
+                        <button class="voice-gender-btn" id="voiceGenderMale" onclick="setVoiceGender('male')" style="padding:8px 16px;border-radius:8px;border:2px solid var(--bg-tertiary);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;">
+                            👨 男聲
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gemini API Key -->
+                <div class="setting-item" id="geminiKeySection" style="flex-direction:column;align-items:stretch;gap:8px;display:none;">
+                    <div class="setting-left">
+                        <div class="setting-icon green">🔑</div>
+                        <span class="setting-label">Gemini API Key</span>
+                    </div>
+                    <input type="password" class="setting-input" id="geminiApiKey" placeholder="AIza..." style="width:100%;">
+                    <div style="font-size:11px;color:var(--text-secondary);">
+                        從 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">Google AI Studio</a> 取得
+                    </div>
+                </div>
+
+                <!-- ElevenLabs API Key -->
+                <div class="setting-item" id="elevenlabsKeySection" style="flex-direction:column;align-items:stretch;gap:8px;display:none;">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">🔑</div>
+                        <span class="setting-label">ElevenLabs API Key</span>
+                    </div>
+                    <input type="password" class="setting-input" id="elevenlabsApiKey" placeholder="sk_..." style="width:100%;">
+                    <div style="font-size:11px;color:var(--text-secondary);">
+                        從 <a href="https://elevenlabs.io/api" target="_blank" style="color:var(--accent);">ElevenLabs</a> 取得
+                    </div>
+                </div>
+
+                <!-- 測試與儲存 -->
+                <div class="setting-item" style="gap:8px;">
+                    <button onclick="saveVoiceSettings()" style="flex:1;padding:10px;background:var(--accent-blue);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">💾 儲存</button>
+                    <button onclick="testVoiceService()" style="flex:1;padding:10px;background:var(--accent-green);color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;">🎙️ 測試語音</button>
+                </div>
+            </div>
+
+            <!-- 每日目標 -->
+            <div class="settings-group">
+                <div class="settings-header">🎯 每日目標</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon green">🍅</div>
+                        <span class="setting-label">目標番茄數</span>
+                    </div>
+                    <div class="setting-value">
+                        <input type="number" class="setting-input" id="dailyGoal" value="8" min="1" max="30" onchange="saveDailyGoal()">
+                        <span>個</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 執行模式 -->
+            <div class="settings-group">
+                <div class="settings-header">📱 執行模式</div>
+                <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px;">
+                    <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+                        選擇計時時的螢幕行為：
+                    </div>
+                    <div class="screen-mode-selector" style="display:flex;gap:8px;width:100%;">
+                        <button class="screen-mode-btn active" id="modeBackground" onclick="setScreenMode('background')" style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--accent);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;">
+                            <div style="font-size:20px;margin-bottom:4px;">🌙</div>
+                            <div style="font-size:13px;font-weight:600;">背景執行</div>
+                            <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">省電，但喚醒後<br>音效可能延遲</div>
+                        </button>
+                        <button class="screen-mode-btn" id="modeAwake" onclick="setScreenMode('awake')" style="flex:1;padding:12px;border-radius:12px;border:2px solid var(--bg-tertiary);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;">
+                            <div style="font-size:20px;margin-bottom:4px;">☀️</div>
+                            <div style="font-size:13px;font-weight:600;">螢幕長亮</div>
+                            <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">耗電，但音效<br>100% 準時響起</div>
+                        </button>
+                    </div>
+                    <div id="wakeLockStatus" style="font-size:11px;color:var(--text-tertiary);text-align:center;width:100%;display:none;">
+                        🔓 螢幕長亮已啟用
+                    </div>
+                </div>
+            </div>
+
+            <!-- 鐘聲選擇 -->
+            <div class="settings-group">
+                <div class="settings-header">🎵 提醒音效（30 種）</div>
+                <div class="chime-selector" id="chimeSelector">
+                    <!-- 原創音效 -->
+                    <button class="chime-option active" onclick="setChime('westminster')">🔔 西敏寺</button>
+                    <button class="chime-option" onclick="setChime('school')">🏫 傳統鐘聲</button>
+                    <button class="chime-option" onclick="setChime('digital')">📱 數位音</button>
+                    <button class="chime-option" onclick="setChime('gentle')">🎐 輕柔鈴聲</button>
+                    <button class="chime-option" onclick="setChime('bird')">🐦 鳥鳴</button>
+                    <!-- 小森平活動音效 -->
+                    <button class="chime-option" onclick="setChime('clap')">👏 掌聲</button>
+                    <button class="chime-option" onclick="setChime('cheers')">🎉 歡呼</button>
+                    <button class="chime-option" onclick="setChime('cracker')">🎊 響砲</button>
+                    <button class="chime-option" onclick="setChime('buzzer')">📢 蜂鳴器</button>
+                    <button class="chime-option" onclick="setChime('firework')">🎆 煙火</button>
+                    <!-- 小森平遊戲音效 -->
+                    <button class="chime-option" onclick="setChime('powerup1')">⬆️ 升級1</button>
+                    <button class="chime-option" onclick="setChime('powerup2')">⬆️ 升級2</button>
+                    <button class="chime-option" onclick="setChime('powerup3')">⬆️ 升級3</button>
+                    <button class="chime-option" onclick="setChime('powerdown1')">⬇️ 降級</button>
+                    <button class="chime-option" onclick="setChime('coin1')">🪙 金幣1</button>
+                    <button class="chime-option" onclick="setChime('coin2')">🪙 金幣2</button>
+                    <button class="chime-option" onclick="setChime('coin3')">🪙 金幣3</button>
+                    <button class="chime-option" onclick="setChime('button1')">🔘 按鈕1</button>
+                    <button class="chime-option" onclick="setChime('button2')">🔘 按鈕2</button>
+                    <button class="chime-option" onclick="setChime('select1')">👆 選擇1</button>
+                    <button class="chime-option" onclick="setChime('select2')">👆 選擇2</button>
+                    <button class="chime-option" onclick="setChime('jump1')">🦘 跳躍1</button>
+                    <button class="chime-option" onclick="setChime('jump2')">🦘 跳躍2</button>
+                    <button class="chime-option" onclick="setChime('cat1')">🐱 貓咪1</button>
+                    <button class="chime-option" onclick="setChime('cat2')">🐱 貓咪2</button>
+                    <button class="chime-option" onclick="setChime('blip1')">📟 嗶嗶1</button>
+                    <button class="chime-option" onclick="setChime('blip2')">📟 嗶嗶2</button>
+                    <!-- 小森平樂器 -->
+                    <button class="chime-option" onclick="setChime('piano')">🎹 小星星</button>
+                    <button class="chime-option" onclick="setChime('wadaiko')">🥁 太鼓</button>
+                    <button class="chime-option" onclick="setChime('pickup1')">✨ 撿取</button>
+                </div>
+            </div>
+
+            <!-- 主題設定 -->
+            <div class="settings-group">
+                <div class="settings-header">🎨 主題</div>
+                <div class="theme-selector">
+                    <div class="theme-option dark active" onclick="setTheme('dark')" title="深色"></div>
+                    <div class="theme-option light" onclick="setTheme('light')" title="淺色"></div>
+                    <div class="theme-option forest" onclick="setTheme('forest')" title="森林"></div>
+                    <div class="theme-option ocean" onclick="setTheme('ocean')" title="海洋"></div>
+                </div>
+            </div>
+
+            <!-- 休眠設定 -->
+            <div class="settings-group">
+                <div class="settings-header">🌙 休眠設定</div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">🌙</div>
+                        <span class="setting-label">休眠開始</span>
+                    </div>
+                    <input type="time" class="setting-input" id="sleepStart" value="00:00" style="width:100px;">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon cyan">🌅</div>
+                        <span class="setting-label">休眠結束</span>
+                    </div>
+                    <input type="time" class="setting-input" id="sleepEnd" value="06:00" style="width:100px;">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">😴</div>
+                        <span class="setting-label">睡眠提醒</span>
+                    </div>
+                    <input type="time" class="setting-input" id="sleepReminder" value="21:45" style="width:100px;">
+                </div>
+            </div>
+
+            <!-- GAS 設定 -->
+            <div class="settings-group">
+                <div class="settings-header">📡 LINE 通知（伺服器端計時）</div>
+                <div style="padding:0 15px 10px;font-size:12px;color:var(--text-secondary);line-height:1.5;">
+                    ⚡ 即使手機休眠，GAS 也會在時間到時發送 LINE 通知喚醒你！
+                </div>
+                <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:8px;">
+                    <div class="setting-left">
+                        <div class="setting-icon purple">🌐</div>
+                        <span class="setting-label">GAS Web App URL</span>
+                    </div>
+                    <input type="text" class="setting-input" id="gasUrl" placeholder="https://script.google.com/..." style="width:100%;">
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="saveGasUrl()" style="flex:1;padding:10px;background:var(--accent-blue);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">💾 儲存</button>
+                        <button onclick="testGas()" style="flex:1;padding:10px;background:var(--accent-green);color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;">📤 測試 LINE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作 -->
+            <div class="settings-group">
+                <div class="setting-item">
+                    <button onclick="saveAllSettings()" style="width:100%;padding:14px;background:var(--accent-blue);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        💾 儲存所有設定
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <button onclick="testRestCountdown()" style="width:100%;padding:14px;background:var(--accent-orange);color:#000;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        ⏱️ 測試休息倒數（10 秒）
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <button onclick="clearAllData()" style="width:100%;padding:14px;background:var(--accent-red);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                        🗑️ 清除所有資料
+                    </button>
+                </div>
+            </div>
+
+            <!-- 關於 -->
+            <div class="settings-group">
+                <div class="settings-header">ℹ️ 關於</div>
+                <div class="setting-item">
+                    <span>版本</span>
+                    <span style="color:var(--text-secondary);">Pro v5.1</span>
+                </div>
+                <div class="setting-item">
+                    <span>快捷鍵</span>
+                    <span style="color:var(--text-secondary);">Space/R/F/M</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部導航 -->
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchPage('timer')">
+                <span class="tab-icon">⏱️</span>
+                <span>計時器</span>
+            </button>
+            <button class="tab-item" onclick="switchPage('stats')">
+                <span class="tab-icon">📊</span>
+                <span>統計</span>
+            </button>
+            <button class="tab-item" onclick="switchPage('settings')">
+                <span class="tab-icon">⚙️</span>
+                <span>設定</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 休息彈窗 -->
+    <div class="rest-modal" id="restModal">
+        <div class="rest-modal-icon" id="restModalIcon">☕</div>
+        <div class="rest-modal-title" id="restModalTitle">休息時間到！</div>
+        <div class="rest-modal-subtitle">站起來活動一下吧</div>
+        <div class="breathing-circle" id="breathingCircle"></div>
+        <div class="breathing-text" id="breathingText">深呼吸...</div>
+        <div class="rest-modal-timer" id="restModalTimer">5:00</div>
+        <div class="rest-modal-activity" id="restActivity">
+            <div class="rest-modal-activity-icon">🚶</div>
+            <div class="rest-modal-activity-text">站起來走走</div>
+        </div>
+        <button class="rest-modal-btn" onclick="endRest()">結束休息，繼續工作</button>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 快捷鍵提示 -->
+    <div class="shortcuts-hint">
+        ⌨️ Space: 開始/暫停 | R: 重置 | F: 全螢幕 | M: 靜音
+    </div>
+
+    <script>
+        // ============================================
+        // 狀態管理
+        // ============================================
+        let settings = {
+            workDuration: 25,
+            shortBreak: 5,
+            longBreak: 15,
+            longBreakInterval: 4,
+            hourlyMinute: 55,
+            classTime: 45,
+            breakTime: 10,
+            sleepStart: '00:00',
+            sleepEnd: '06:00',
+            sleepReminder: '21:45',
+            notification: true,
+            sound: true,
+            voice: false,
+            vibrate: true,
+            chime: 'westminster',
+            theme: 'dark',
+            gasUrl: '',
+            screenMode: 'background',
+            dailyGoal: 8,
+            // 語音服務設定
+            voiceService: 'web',        // 'web' | 'gemini' | 'elevenlabs'
+            voiceGender: 'female',      // 'male' | 'female'
+            geminiApiKey: '',
+            elevenlabsApiKey: ''
+        };
+
+        let timerState = {
+            mode: 'countdown', // countdown | hourly | classroom
+            phase: 'work', // work | rest | longRest
+            isRunning: false,
+            timeLeft: 25 * 60,
+            totalTime: 25 * 60,
+            pomodoroCount: 0, // 當前週期的番茄數
+            sessionCount: 0,  // 今日總番茄數
+            endTime: null     // 計時結束的時間戳（用於背景計時）
+        };
+
+        let stats = {
+            todayCount: 0,
+            todayMinutes: 0,
+            streak: 0,
+            bestStreak: 0,
+            lastDate: null,
+            history: [],
+            weeklyData: [0, 0, 0, 0, 0, 0, 0],
+            totalPomodoros: 0,       // 歷史總番茄數
+            totalMinutes: 0,         // 歷史總分鐘數
+            forest: [],              // 番茄森林：[{date, count, trees:[]}]
+            achievements: []         // 已解鎖成就
+        };
+
+        // 成就定義
+        const ACHIEVEMENTS = [
+            { id: 'first', icon: '🌱', name: '初次萌芽', desc: '完成第一個番茄', condition: s => s.totalPomodoros >= 1 },
+            { id: 'ten', icon: '🌿', name: '小有成就', desc: '累計完成 10 個番茄', condition: s => s.totalPomodoros >= 10 },
+            { id: 'fifty', icon: '🌳', name: '茁壯成長', desc: '累計完成 50 個番茄', condition: s => s.totalPomodoros >= 50 },
+            { id: 'hundred', icon: '🏆', name: '番茄大師', desc: '累計完成 100 個番茄', condition: s => s.totalPomodoros >= 100 },
+            { id: 'fiveHundred', icon: '👑', name: '專注王者', desc: '累計完成 500 個番茄', condition: s => s.totalPomodoros >= 500 },
+            { id: 'streak3', icon: '🔥', name: '三日連勝', desc: '連續 3 天完成番茄', condition: s => s.streak >= 3 },
+            { id: 'streak7', icon: '💪', name: '週冠軍', desc: '連續 7 天完成番茄', condition: s => s.streak >= 7 },
+            { id: 'streak30', icon: '⭐', name: '月度之星', desc: '連續 30 天完成番茄', condition: s => s.streak >= 30 },
+            { id: 'daily4', icon: '🎯', name: '半日達標', desc: '單日完成 4 個番茄', condition: s => s.todayCount >= 4 },
+            { id: 'daily8', icon: '🎖️', name: '全日達標', desc: '單日完成 8 個番茄', condition: s => s.todayCount >= 8 },
+            { id: 'daily12', icon: '🏅', name: '超級專注', desc: '單日完成 12 個番茄', condition: s => s.todayCount >= 12 },
+            { id: 'hour5', icon: '⏰', name: '五小時達人', desc: '單日專注超過 5 小時', condition: s => s.todayMinutes >= 300 },
+            { id: 'earlyBird', icon: '🌅', name: '早起鳥兒', desc: '早上 6 點前完成番茄', condition: () => new Date().getHours() < 6 },
+            { id: 'nightOwl', icon: '🦉', name: '夜貓子', desc: '晚上 11 點後完成番茄', condition: () => new Date().getHours() >= 23 }
+        ];
+
+        // 樹木類型（根據當日完成數量）
+        const TREE_TYPES = [
+            { min: 1, icon: '🌱', name: '幼苗' },
+            { min: 2, icon: '🌿', name: '小草' },
+            { min: 4, icon: '🪴', name: '盆栽' },
+            { min: 6, icon: '🌲', name: '松樹' },
+            { min: 8, icon: '🌳', name: '大樹' },
+            { min: 10, icon: '🎄', name: '聖誕樹' },
+            { min: 12, icon: '🌴', name: '棕櫚樹' },
+            { min: 15, icon: '💐', name: '花束' },
+            { min: 20, icon: '🏵️', name: '金花' }
+        ];
+
+        let todos = [];
+        let activeTodoIndex = -1;
+
+        let timerInterval = null;
+        let hourlyCheckInterval = null;
+        let lastHourlyReminder = null;
+        let breathingInterval = null;
+
+        // 白噪音
+        let ambientAudio = null;
+        let ambientGainNode = null;
+        let currentAmbient = 'none';
+
+        // 音效
+        let audioContext = null;
+
+        const restActivities = [
+            { icon: '🚶', text: '站起來走走' },
+            { icon: '💧', text: '喝杯水補充水分' },
+            { icon: '👀', text: '看看窗外遠方' },
+            { icon: '🧘', text: '做幾個伸展動作' },
+            { icon: '🌬️', text: '深呼吸放鬆' },
+            { icon: '☕', text: '泡杯茶或咖啡' }
+        ];
+
+        // ============================================
+        // 初始化
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 開機動畫
+            setTimeout(() => {
+                document.getElementById('splashScreen').classList.add('fade-out');
+                setTimeout(() => {
+                    document.getElementById('splashScreen').style.display = 'none';
+                }, 800);
+            }, 2000);
+
+            // 載入設定和統計
+            loadSettings();
+            loadStats();
+            loadTodos();
+            
+            // 恢復計時狀態（如果有）
+            loadTimerState();
+
+            // 更新狀態列時間
+            updateStatusTime();
+            setInterval(updateStatusTime, 1000);
+
+            // 更新顯示
+            updateTimerDisplay();
+            updateStatsDisplay();
+            updateTodoList();
+            updateChart();
+            updatePomodoroCount();
+            updateForest();
+            updateAchievementList();
+            updateGoalProgress();
+
+            // 啟動整點檢查
+            startHourlyCheck();
+
+            // 請求通知權限
+            requestNotificationPermission();
+
+            // 初始化音效
+            initAudio();
+            
+            // 初始化語音引擎
+            initSpeech();
+
+            // 綁定鍵盤快捷鍵
+            bindKeyboardShortcuts();
+        });
+
+        // ============================================
+        // 頁面切換
+        // ============================================
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById('page-' + page).classList.add('active');
+            
+            // 找到對應的 tab 並加上 active
+            document.querySelectorAll('.tab-item').forEach(t => {
+                if (t.getAttribute('onclick').includes(`'${page}'`)) {
+                    t.classList.add('active');
+                }
+            });
+
+            if (page === 'stats') {
+                updateChart();
+                updateHistoryList();
+                updateForest();
+                updateAchievementList();
+            }
+        }
+
+        // ============================================
+        // 模式切換
+        // ============================================
+        function setMode(mode) {
+            timerState.mode = mode;
+            timerState.phase = 'work';
+            timerState.isRunning = false;
+            clearInterval(timerInterval);
+
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // 找到對應的按鈕並加上 active
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(`'${mode}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (mode === 'countdown') {
+                timerState.timeLeft = settings.workDuration * 60;
+                timerState.totalTime = settings.workDuration * 60;
+            } else if (mode === 'classroom') {
+                timerState.timeLeft = settings.classTime * 60;
+                timerState.totalTime = settings.classTime * 60;
+                document.getElementById('timerLabel').textContent = '上課時間';
+                document.getElementById('timerEmoji').textContent = '📚';
+            } else {
+                updateHourlyDisplay();
+            }
+
+            updateTimerDisplay();
+            updateTimerStyle();
+            updateStartButton();
+        }
+
+        // ============================================
+        // 計時器控制
+        // ============================================
+        function toggleTimer() {
+            if (timerState.mode === 'hourly') {
+                showToast('整點模式會自動提醒');
+                return;
+            }
+
+            if (timerState.isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            timerState.isRunning = true;
+            timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+            updateStartButton();
+            
+            // 螢幕長亮模式
+            handleWakeLockOnTimerStart();
+            
+            // 🔔 發送到 GAS 伺服器端計時（即使休眠也會通知）
+            sendTimerToGAS('work', Math.ceil(timerState.timeLeft / 60));
+
+            timerInterval = setInterval(() => {
+                // 用時間戳計算剩餘時間，避免背景節流問題
+                const now = Date.now();
+                const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
+                timerState.timeLeft = remaining;
+                updateTimerDisplay();
+
+                if (timerState.timeLeft <= 0) {
+                    handleTimerComplete();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            timerState.isRunning = false;
+            timerState.endTime = null;
+            clearInterval(timerInterval);
+            updateStartButton();
+            
+            // 暫停時釋放 Wake Lock
+            handleWakeLockOnTimerStop();
+            
+            // 取消 GAS 伺服器端計時
+            cancelGASTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerState.isRunning = false;
+            timerState.phase = 'work';
+            timerState.endTime = null;
+
+            if (timerState.mode === 'countdown') {
+                timerState.timeLeft = settings.workDuration * 60;
+                timerState.totalTime = settings.workDuration * 60;
+            } else if (timerState.mode === 'classroom') {
+                timerState.timeLeft = settings.classTime * 60;
+                timerState.totalTime = settings.classTime * 60;
+            }
+
+            updateTimerDisplay();
+            updateTimerStyle();
+            updateStartButton();
+            showToast('⏱️ 計時器已重置');
+        }
+
+        function skipPhase() {
+            handleTimerComplete();
+        }
+
+        function handleTimerComplete(skipSound = false) {
+            clearInterval(timerInterval);
+            timerState.isRunning = false;
+            timerState.endTime = null;
+            
+            // 震動提醒
+            vibrate([200, 100, 200, 100, 300]);
+            
+            if (timerState.phase === 'work') {
+                // 工作完成
+                timerState.pomodoroCount++;
+                timerState.sessionCount++;
+                stats.todayCount++;
+                stats.totalPomodoros++;
+                const workMin = timerState.mode === 'classroom' ? settings.classTime : settings.workDuration;
+                stats.todayMinutes += workMin;
+                stats.totalMinutes += workMin;
+                
+                // 立即保存統計（重要：背景完成時確保數據不丟失）
+                saveStats();
+                console.log('🍅 番茄完成！今日:', stats.todayCount, '總計:', stats.totalPomodoros);
+                
+                // 檢查成就
+                checkAchievements();
+                
+                // 更新番茄森林
+                updateForest();
+                
+                updatePomodoroCount();
+
+                // 更新待辦事項
+                if (activeTodoIndex >= 0 && todos[activeTodoIndex]) {
+                    todos[activeTodoIndex].pomodoros++;
+                    saveTodos();
+                    updateTodoList();
+                }
+
+                // 🗣️ 語音優先（更可靠），音效延遲播放
+                sendNotification('🍅 工作完成！', `今日 ${stats.todayCount}/${settings.dailyGoal} 個番茄`);
+                speakWorkComplete();
+                if (!skipSound) {
+                    setTimeout(() => playSound(), 500); // 語音後播音效
+                }
+
+                // 判斷是否長休息
+                if (timerState.pomodoroCount >= settings.longBreakInterval) {
+                    timerState.phase = 'longRest';
+                    timerState.timeLeft = settings.longBreak * 60;
+                    timerState.totalTime = settings.longBreak * 60;
+                    timerState.pomodoroCount = 0;
+                    document.getElementById('restModalTitle').textContent = '🌴 長休息時間！';
+                    document.getElementById('restModalIcon').textContent = '🌴';
+                } else {
+                    timerState.phase = 'rest';
+                    if (timerState.mode === 'classroom') {
+                        timerState.timeLeft = settings.breakTime * 60;
+                        timerState.totalTime = settings.breakTime * 60;
+                        document.getElementById('restModalTitle').textContent = '🎉 下課時間！';
+                        document.getElementById('restModalIcon').textContent = '🎉';
+                    } else {
+                        timerState.timeLeft = settings.shortBreak * 60;
+                        timerState.totalTime = settings.shortBreak * 60;
+                        document.getElementById('restModalTitle').textContent = '☕ 休息時間到！';
+                        document.getElementById('restModalIcon').textContent = '☕';
+                    }
+                }
+
+                updateTimerStyle();
+                showRestModal();
+                startRestTimer();
+
+            } else {
+                // 休息完成
+                timerState.phase = 'work';
+                if (timerState.mode === 'classroom') {
+                    timerState.timeLeft = settings.classTime * 60;
+                    timerState.totalTime = settings.classTime * 60;
+                } else {
+                    timerState.timeLeft = settings.workDuration * 60;
+                    timerState.totalTime = settings.workDuration * 60;
+                }
+
+                // 🗣️ 語音優先，音效延遲
+                sendNotification('☕ 休息結束！', '準備開始工作');
+                speakRestComplete();
+                setTimeout(() => playShortBeep(), 500);
+                
+                hideRestModal();
+                updateTimerStyle();
+                updateTimerDisplay();
+                updateStartButton();
+                
+                // 休息結束，釋放 Wake Lock
+                handleWakeLockOnTimerStop();
+            }
+
+            updateStatsDisplay();
+        }
+
+        function startRestTimer() {
+            timerState.isRunning = true;
+            timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+            startBreathingAnimation();
+            
+            // 🔔 發送休息計時到 GAS
+            sendTimerToGAS('rest', Math.ceil(timerState.timeLeft / 60));
+
+            timerInterval = setInterval(() => {
+                // 用時間戳計算剩餘時間
+                const now = Date.now();
+                const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
+                timerState.timeLeft = remaining;
+                updateTimerDisplay();
+                updateRestModalTimer();
+
+                if (timerState.timeLeft <= 0) {
+                    handleTimerComplete();
+                }
+            }, 1000);
+        }
+
+        // ============================================
+        // 顯示更新
+        // ============================================
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerState.timeLeft / 60);
+            const seconds = timerState.timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // 更新圓環進度
+            const progress = document.getElementById('timerProgress');
+            const circumference = 2 * Math.PI * 130;
+            const offset = circumference * (1 - timerState.timeLeft / timerState.totalTime);
+            progress.style.strokeDashoffset = offset;
+        }
+
+        function updateTimerStyle() {
+            const progress = document.getElementById('timerProgress');
+            const label = document.getElementById('timerLabel');
+            const emoji = document.getElementById('timerEmoji');
+            const startBtn = document.getElementById('startBtn');
+
+            if (timerState.phase === 'work') {
+                progress.classList.remove('rest');
+                if (timerState.mode === 'classroom') {
+                    label.textContent = '上課時間';
+                    emoji.textContent = '📚';
+                } else {
+                    label.textContent = '工作時間';
+                    emoji.textContent = '🍅';
+                }
+                startBtn.classList.remove('rest-mode');
+            } else {
+                progress.classList.add('rest');
+                if (timerState.phase === 'longRest') {
+                    label.textContent = '長休息';
+                    emoji.textContent = '🌴';
+                } else if (timerState.mode === 'classroom') {
+                    label.textContent = '下課時間';
+                    emoji.textContent = '🎉';
+                } else {
+                    label.textContent = '休息時間';
+                    emoji.textContent = '☕';
+                }
+                startBtn.classList.add('rest-mode');
+            }
+        }
+
+        function updateStartButton() {
+            const btn = document.getElementById('startBtn');
+            const icon = document.getElementById('startIcon');
+            const text = document.getElementById('startText');
+
+            if (timerState.isRunning) {
+                btn.classList.add('running');
+                icon.textContent = '⏸';
+                text.textContent = '暫停';
+            } else {
+                btn.classList.remove('running');
+                icon.textContent = '▶';
+                text.textContent = '開始';
+            }
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('todayCount').textContent = stats.todayCount;
+            document.getElementById('todayMinutes').textContent = stats.todayMinutes;
+            document.getElementById('streakDays').textContent = stats.streak;
+            document.getElementById('bestStreak').textContent = stats.bestStreak;
+            
+            // 更新每日目標進度
+            updateGoalProgress();
+        }
+
+        // ============================================
+        // 每日目標
+        // ============================================
+        function updateGoalProgress() {
+            const progress = Math.min(100, (stats.todayCount / settings.dailyGoal) * 100);
+            document.getElementById('goalProgress').textContent = `${stats.todayCount}/${settings.dailyGoal}`;
+            document.getElementById('goalProgressBar').style.width = progress + '%';
+            
+            // 達標時變金色
+            if (stats.todayCount >= settings.dailyGoal) {
+                document.getElementById('goalProgressBar').style.background = 'linear-gradient(90deg, #ffd700, #ffaa00)';
+            } else {
+                document.getElementById('goalProgressBar').style.background = 'linear-gradient(90deg, #30d158, #34c759)';
+            }
+        }
+
+        function saveDailyGoal() {
+            settings.dailyGoal = parseInt(document.getElementById('dailyGoal').value) || 8;
+            saveSettings();
+            updateGoalProgress();
+            showToast(`🎯 每日目標設為 ${settings.dailyGoal} 個番茄`);
+        }
+
+        // ============================================
+        // 震動提醒
+        // ============================================
+        function vibrate(pattern = [200, 100, 200, 100, 200]) {
+            if (!settings.vibrate) return;
+            if ('vibrate' in navigator) {
+                try {
+                    navigator.vibrate(pattern);
+                    console.log('📳 震動已觸發');
+                } catch (e) {
+                    console.log('震動失敗:', e);
+                }
+            }
+        }
+
+        function testVibrate() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([100, 50, 100, 50, 100]);
+                showToast('📳 震動測試');
+            } else {
+                showToast('❌ 此裝置不支援震動');
+            }
+        }
+
+        // ============================================
+        // 番茄森林
+        // ============================================
+        function updateForest() {
+            const container = document.getElementById('forestContainer');
+            if (!container) return;
+            
+            // 計算總樹木數
+            let totalTrees = 0;
+            let html = '';
+            
+            // 根據歷史記錄生成樹木
+            const allDays = [...stats.history];
+            if (stats.todayCount > 0) {
+                allDays.push({ count: stats.todayCount, date: 'today' });
+            }
+            
+            allDays.forEach(day => {
+                const tree = getTreeType(day.count);
+                if (tree) {
+                    totalTrees++;
+                    html += `<div style="font-size:${20 + tree.min}px;transition:transform 0.3s;" title="${tree.name} (${day.count}個番茄)">${tree.icon}</div>`;
+                }
+            });
+            
+            if (html === '') {
+                html = '<div style="color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,0.3);font-size:14px;">完成番茄來種植你的森林 🌱</div>';
+            }
+            
+            container.innerHTML = html;
+            document.getElementById('forestStats').textContent = 
+                `累計 ${stats.totalPomodoros} 個番茄，種了 ${totalTrees} 棵樹`;
+        }
+
+        function getTreeType(count) {
+            let result = null;
+            for (const tree of TREE_TYPES) {
+                if (count >= tree.min) {
+                    result = tree;
+                }
+            }
+            return result;
+        }
+
+        // ============================================
+        // 成就系統
+        // ============================================
+        function checkAchievements() {
+            let newAchievement = false;
+            
+            ACHIEVEMENTS.forEach(achievement => {
+                if (!stats.achievements.includes(achievement.id)) {
+                    if (achievement.condition(stats)) {
+                        stats.achievements.push(achievement.id);
+                        newAchievement = true;
+                        showAchievementPopup(achievement);
+                    }
+                }
+            });
+            
+            if (newAchievement) {
+                saveStats();
+                updateAchievementList();
+            }
+        }
+
+        function showAchievementPopup(achievement) {
+            showToast(`🏆 成就解鎖：${achievement.icon} ${achievement.name}！`);
+            vibrate([100, 50, 100, 50, 200, 100, 200]);
+        }
+
+        function updateAchievementList() {
+            const container = document.getElementById('achievementList');
+            if (!container) return;
+            
+            let html = '';
+            ACHIEVEMENTS.forEach(achievement => {
+                const unlocked = stats.achievements.includes(achievement.id);
+                html += `
+                    <div style="padding:12px;background:var(--bg-tertiary);border-radius:12px;opacity:${unlocked ? 1 : 0.4};${unlocked ? 'border:2px solid var(--accent);' : ''}">
+                        <div style="font-size:24px;text-align:center;">${achievement.icon}</div>
+                        <div style="font-size:12px;font-weight:600;text-align:center;margin-top:4px;">${achievement.name}</div>
+                        <div style="font-size:10px;color:var(--text-secondary);text-align:center;margin-top:2px;">${achievement.desc}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('achievementCount').textContent = stats.achievements.length;
+        }
+
+        // ============================================
+        // 資料匯出
+        // ============================================
+        function exportData(format) {
+            let content, filename, type;
+            
+            if (format === 'csv') {
+                content = generateCSV();
+                filename = `pomodoro_${new Date().toISOString().split('T')[0]}.csv`;
+                type = 'text/csv;charset=utf-8';
+            } else {
+                content = JSON.stringify({
+                    settings: settings,
+                    stats: stats,
+                    todos: todos,
+                    exportDate: new Date().toISOString()
+                }, null, 2);
+                filename = `pomodoro_${new Date().toISOString().split('T')[0]}.json`;
+                type = 'application/json';
+            }
+            
+            // 添加 BOM 以支援中文
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + content], { type: type });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast(`💾 已匯出 ${filename}`);
+        }
+
+        function generateCSV() {
+            let csv = '日期,番茄數,專注分鐘\n';
+            
+            // 歷史資料
+            stats.history.forEach(day => {
+                csv += `${day.date},${day.count},${day.minutes}\n`;
+            });
+            
+            // 今日
+            if (stats.todayCount > 0) {
+                const today = new Date();
+                csv += `${today.getMonth()+1}/${today.getDate()},${stats.todayCount},${stats.todayMinutes}\n`;
+            }
+            
+            // 統計摘要
+            csv += '\n統計摘要\n';
+            csv += `總番茄數,${stats.totalPomodoros}\n`;
+            csv += `總專注分鐘,${stats.totalMinutes}\n`;
+            csv += `最佳連續天數,${stats.bestStreak}\n`;
+            csv += `已解鎖成就,${stats.achievements.length}\n`;
+            
+            return csv;
+        }
+
+        function updatePomodoroCount() {
+            const dots = document.querySelectorAll('.pomodoro-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('completed', 'long-break');
+                if (index < timerState.pomodoroCount) {
+                    dot.classList.add('completed');
+                }
+            });
+        }
+
+        function updateStatusTime() {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                           now.getMinutes().toString().padStart(2, '0');
+            document.querySelectorAll('.status-time').forEach(el => el.textContent = timeStr);
+        }
+
+        // ============================================
+        // 整點模式
+        // ============================================
+        function startHourlyCheck() {
+            // 每秒檢查一次，讓進度環能平滑更新
+            hourlyCheckInterval = setInterval(checkHourlyReminder, 1000);
+            checkHourlyReminder();
+        }
+
+        function checkHourlyReminder() {
+            if (timerState.mode !== 'hourly') return;
+            if (isInSleepTime()) return;
+            if (timerState.phase === 'rest') return;
+
+            const now = new Date();
+            const currentMinute = now.getMinutes();
+            const currentHour = now.getHours();
+            const key = `${currentHour}:${currentMinute}`;
+
+            if (currentMinute === settings.hourlyMinute && lastHourlyReminder !== key) {
+                lastHourlyReminder = key;
+                triggerHourlyReminder();
+                return;
+            }
+
+            updateHourlyDisplay();
+        }
+
+        function triggerHourlyReminder() {
+            // 🗣️ 語音優先
+            speakHourlyReminder();
+            setTimeout(() => playSound(), 500);  // 語音後播音效
+            
+            // 震動提醒
+            vibrate([200, 100, 200, 100, 300]);
+            
+            sendNotification('⏰ 整點提醒！', `今日 ${stats.todayCount + 1}/${settings.dailyGoal} 個番茄`);
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // 記錄番茄數（整點模式也要計入）
+            timerState.pomodoroCount++;
+            timerState.sessionCount++;
+            stats.todayCount++;
+            stats.totalPomodoros++;
+            stats.todayMinutes += settings.hourlyMinute;
+            stats.totalMinutes += settings.hourlyMinute;
+            updatePomodoroCount();
+            saveStats();
+            updateStatsDisplay();
+            
+            // 檢查成就
+            checkAchievements();
+            updateForest();
+
+            // 更新待辦事項
+            if (activeTodoIndex >= 0 && todos[activeTodoIndex]) {
+                todos[activeTodoIndex].pomodoros++;
+                saveTodos();
+                updateTodoList();
+            }
+
+            timerState.phase = 'rest';
+            timerState.isRunning = true;
+            timerState.timeLeft = settings.shortBreak * 60;
+            timerState.totalTime = settings.shortBreak * 60;
+            timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+
+            document.getElementById('timerLabel').textContent = '休息時間';
+            updateTimerDisplay();
+            updateTimerStyle();
+            showRestModal();
+
+            timerInterval = setInterval(function() {
+                // 用時間戳計算剩餘時間
+                const now = Date.now();
+                const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
+                timerState.timeLeft = remaining;
+                updateTimerDisplay();
+                updateRestModalTimer();
+                
+                if (timerState.timeLeft <= 0) {
+                    endRest();
+                }
+            }, 1000);
+        }
+
+        function updateHourlyDisplay() {
+            if (timerState.mode !== 'hourly') return;
+            if (timerState.phase === 'rest' && timerState.isRunning) return;
+
+            const now = new Date();
+            const currentMinute = now.getMinutes();
+            const currentSecond = now.getSeconds();
+            
+            let minutesUntil = settings.hourlyMinute - currentMinute;
+            if (minutesUntil <= 0) minutesUntil += 60;
+            
+            // 計算精確的剩餘秒數
+            const secondsUntil = minutesUntil * 60 - currentSecond;
+
+            // totalTime 固定為 60 分鐘（一個完整週期）
+            timerState.totalTime = 60 * 60; // 60 分鐘
+            timerState.timeLeft = secondsUntil;
+
+            // 更新顯示
+            const displayMinutes = Math.floor(secondsUntil / 60);
+            const displaySeconds = secondsUntil % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+            document.getElementById('timerLabel').textContent = '距離下次休息';
+            
+            // 更新進度環（綠色 = 剩餘時間）
+            // 剩餘越多，綠色越多；倒數到 0 時綠色消失
+            const progress = document.getElementById('timerProgress');
+            const circumference = 2 * Math.PI * 130;
+            const offset = circumference * (1 - timerState.timeLeft / timerState.totalTime);
+            progress.style.strokeDashoffset = offset;
+        }
+
+        function isInSleepTime() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const [startH, startM] = settings.sleepStart.split(':').map(Number);
+            const [endH, endM] = settings.sleepEnd.split(':').map(Number);
+            const sleepStart = startH * 60 + startM;
+            const sleepEnd = endH * 60 + endM;
+
+            if (sleepStart <= sleepEnd) {
+                return currentTime >= sleepStart && currentTime < sleepEnd;
+            } else {
+                return currentTime >= sleepStart || currentTime < sleepEnd;
+            }
+        }
+
+        // ============================================
+        // 休息彈窗
+        // ============================================
+        function showRestModal() {
+            const activity = restActivities[Math.floor(Math.random() * restActivities.length)];
+            document.getElementById('restActivity').innerHTML = `
+                <div class="rest-modal-activity-icon">${activity.icon}</div>
+                <div class="rest-modal-activity-text">${activity.text}</div>
+            `;
+
+            const minutes = Math.floor(timerState.timeLeft / 60);
+            const seconds = timerState.timeLeft % 60;
+            document.getElementById('restModalTimer').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            document.getElementById('restModal').classList.add('show');
+            startBreathingAnimation();
+        }
+
+        function hideRestModal() {
+            document.getElementById('restModal').classList.remove('show');
+            stopBreathingAnimation();
+        }
+
+        function updateRestModalTimer() {
+            const minutes = Math.floor(timerState.timeLeft / 60);
+            const seconds = timerState.timeLeft % 60;
+            document.getElementById('restModalTimer').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function endRest() {
+            clearInterval(timerInterval);
+            timerState.isRunning = false;
+            timerState.phase = 'work';
+            timerState.endTime = null;
+            hideRestModal();
+            
+            // 🗣️ 語音優先
+            speakRestComplete();
+            setTimeout(() => playShortBeep(), 500);
+            
+            // 震動
+            vibrate([100, 50, 100]);
+
+            sendNotification('☕ 休息結束！', '準備開始工作');
+
+            if (timerState.mode === 'countdown') {
+                timerState.timeLeft = settings.workDuration * 60;
+                timerState.totalTime = settings.workDuration * 60;
+                updateTimerDisplay();
+                updateTimerStyle();
+                updateStartButton();
+            } else if (timerState.mode === 'classroom') {
+                timerState.timeLeft = settings.classTime * 60;
+                timerState.totalTime = settings.classTime * 60;
+                updateTimerDisplay();
+                updateTimerStyle();
+                updateStartButton();
+            } else {
+                updateHourlyDisplay();
+            }
+        }
+
+        // 呼吸動畫
+        function startBreathingAnimation() {
+            const texts = ['吸氣...', '憋住...', '吐氣...', '放鬆...'];
+            let index = 0;
+            
+            breathingInterval = setInterval(() => {
+                document.getElementById('breathingText').textContent = texts[index];
+                index = (index + 1) % texts.length;
+            }, 4000);
+        }
+
+        function stopBreathingAnimation() {
+            if (breathingInterval) {
+                clearInterval(breathingInterval);
+                breathingInterval = null;
+            }
+        }
+
+        // ============================================
+        // 待辦事項
+        // ============================================
+        function toggleTodoInput() {
+            document.getElementById('todoInputContainer').classList.toggle('show');
+            document.getElementById('todoInput').focus();
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            todos.push({
+                id: Date.now(),
+                text: text,
+                completed: false,
+                pomodoros: 0
+            });
+
+            input.value = '';
+            document.getElementById('todoInputContainer').classList.remove('show');
+            saveTodos();
+            updateTodoList();
+            showToast('✅ 任務已新增');
+        }
+
+        function toggleTodo(index) {
+            todos[index].completed = !todos[index].completed;
+            saveTodos();
+            updateTodoList();
+        }
+
+        function setActiveTodo(index) {
+            activeTodoIndex = index;
+            updateTodoList();
+            showToast(`🎯 專注於：${todos[index].text}`);
+        }
+
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            if (activeTodoIndex === index) activeTodoIndex = -1;
+            saveTodos();
+            updateTodoList();
+        }
+
+        function updateTodoList() {
+            const list = document.getElementById('todoList');
+            
+            if (todos.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">尚無待辦事項</div>';
+                return;
+            }
+
+            list.innerHTML = todos.map((todo, index) => `
+                <div class="todo-item ${todo.completed ? 'completed' : ''} ${index === activeTodoIndex ? 'active' : ''}" 
+                     onclick="setActiveTodo(${index})">
+                    <div class="todo-checkbox" onclick="event.stopPropagation();toggleTodo(${index})">
+                        ${todo.completed ? '✓' : ''}
+                    </div>
+                    <div class="todo-text">${todo.text}</div>
+                    <div class="todo-pomodoros">🍅 ${todo.pomodoros}</div>
+                    <div class="todo-delete" onclick="event.stopPropagation();deleteTodo(${index})">✕</div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // 圖表
+        // ============================================
+        function updateChart() {
+            const container = document.getElementById('chartBars');
+            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            const today = new Date().getDay();
+            
+            const maxValue = Math.max(...stats.weeklyData, 1);
+
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                const dayIndex = (today - 6 + i + 7) % 7;
+                const value = stats.weeklyData[i] || 0;
+                const height = (value / maxValue) * 100;
+                const isToday = i === 6;
+
+                html += `
+                    <div class="chart-bar-group">
+                        <div class="chart-bar" style="height:${height}px;${isToday ? 'opacity:1;' : 'opacity:0.6;'}"></div>
+                        <div class="chart-bar-label" style="${isToday ? 'color:var(--accent-blue);font-weight:600;' : ''}">${days[dayIndex]}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function setChartView(view) {
+            document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+            // 找到對應的 tab 並加上 active
+            document.querySelectorAll('.chart-tab').forEach(t => {
+                if (t.getAttribute('onclick').includes(`'${view}'`)) {
+                    t.classList.add('active');
+                }
+            });
+            // 可以擴展為月視圖
+            updateChart();
+        }
+
+        function updateHistoryList() {
+            const list = document.getElementById('historyList');
+            const history = stats.history.slice(-10).reverse();
+
+            if (history.length === 0) {
+                list.innerHTML = '<div class="setting-item" style="justify-content:center;color:var(--text-tertiary);">尚無歷史紀錄</div>';
+                return;
+            }
+
+            list.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="history-date">${item.date}</div>
+                    <div class="history-stats">
+                        <div class="history-stat">
+                            <div class="history-stat-value">${item.count}</div>
+                            <div class="history-stat-label">番茄</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-value">${item.minutes}</div>
+                            <div class="history-stat-label">分鐘</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // 白噪音
+        // ============================================
+        function toggleAmbient(type) {
+            // 先初始化音效
+            if (!audioContext) initAudio();
+            
+            document.querySelectorAll('.ambient-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (type === 'none' || type === currentAmbient) {
+                stopAmbient();
+                currentAmbient = 'none';
+                showToast('🔇 白噪音已關閉');
+                return;
+            }
+
+            // 找到對應的按鈕並加上 active
+            document.querySelectorAll('.ambient-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(`'${type}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            currentAmbient = type;
+            playAmbient(type);
+        }
+
+        function playAmbient(type) {
+            stopAmbient();
+
+            // 使用 Web Audio API 生成白噪音
+            if (!audioContext) initAudio();
+            if (!audioContext) return;
+            
+            // 確保 context 是運行狀態
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            try {
+                const bufferSize = 2 * audioContext.sampleRate;
+                const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+
+                // 根據類型生成不同的噪音
+                for (let i = 0; i < bufferSize; i++) {
+                    if (type === 'rain' || type === 'ocean') {
+                        output[i] = Math.random() * 2 - 1;
+                    } else if (type === 'forest' || type === 'wind') {
+                        output[i] = (Math.random() * 2 - 1) * 0.5;
+                    } else {
+                        output[i] = (Math.random() * 2 - 1) * 0.3;
+                    }
+                }
+
+                ambientAudio = audioContext.createBufferSource();
+                ambientAudio.buffer = noiseBuffer;
+                ambientAudio.loop = true;
+
+                ambientGainNode = audioContext.createGain();
+                ambientGainNode.gain.value = document.getElementById('ambientVolume').value / 100 * 0.3;
+
+                // 加入濾波器讓聲音更自然
+                const filter = audioContext.createBiquadFilter();
+                if (type === 'rain') {
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 1000;
+                } else if (type === 'ocean') {
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 500;
+                } else if (type === 'forest') {
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 2000;
+                } else {
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 800;
+                }
+
+                ambientAudio.connect(filter);
+                filter.connect(ambientGainNode);
+                ambientGainNode.connect(audioContext.destination);
+                ambientAudio.start();
+
+                showToast(`🎵 ${type === 'rain' ? '雨聲' : type === 'cafe' ? '咖啡廳' : type === 'forest' ? '森林' : type === 'ocean' ? '海浪' : type === 'fire' ? '壁爐' : type === 'wind' ? '微風' : '夜晚'}已開啟`);
+            } catch (e) {
+                console.log('白噪音播放失敗:', e);
+            }
+        }
+
+        function stopAmbient() {
+            if (ambientAudio) {
+                try {
+                    ambientAudio.stop();
+                } catch (e) {}
+                ambientAudio = null;
+            }
+        }
+
+        function setAmbientVolume(value) {
+            // 直接調整音量（如果有 gainNode）
+            if (ambientGainNode) {
+                ambientGainNode.gain.value = value / 100 * 0.3;
+            }
+        }
+
+        // ============================================
+        // 音效系統（修復背景喚醒問題）
+        // ============================================
+        let notificationAudio = null; // HTML Audio 元素用於播放外部音效
+        
+        function initAudio() {
+            if (audioContext) {
+                // 重新激活已存在的 context
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                return;
+            }
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                console.log('🔊 AudioContext 已初始化');
+            } catch (e) {
+                console.log('音效初始化失敗:', e);
+            }
+        }
+
+        // 頁面可見性變化時重新激活音效和計時器
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                console.log('📱 頁面喚醒');
+                
+                // 重新激活音效
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        console.log('✅ AudioContext 已恢復');
+                        // 如果白噪音正在播放，重新啟動
+                        if (currentAmbient !== 'none') {
+                            console.log('🎵 重新啟動白噪音:', currentAmbient);
+                            playAmbient(currentAmbient);
+                        }
+                    });
+                }
+                
+                // 重新計算計時器（背景時可能被節流）
+                if (timerState.isRunning && timerState.endTime) {
+                    const now = Date.now();
+                    const remaining = Math.ceil((timerState.endTime - now) / 1000);
+                    
+                    console.log('📊 背景檢查:', {
+                        phase: timerState.phase,
+                        remaining: remaining,
+                        todayCount: stats.todayCount
+                    });
+                    
+                    if (remaining <= 0) {
+                        // 時間已到，觸發完成
+                        console.log('⏰ 背景計時完成，phase:', timerState.phase);
+                        timerState.timeLeft = 0;
+                        
+                        // 記錄完成前的狀態
+                        const wasWorkPhase = timerState.phase === 'work';
+                        
+                        // 先恢復 AudioContext
+                        const doComplete = () => {
+                            playSound();
+                            handleTimerComplete(true); // skipSound = true
+                            
+                            // 確保 UI 更新
+                            updateStatsDisplay();
+                            updateTimerDisplay();
+                            
+                            if (wasWorkPhase) {
+                                console.log('🍅 背景完成工作，番茄數:', stats.todayCount);
+                                showToast(`🍅 背景完成！今日 ${stats.todayCount} 個番茄`);
+                            }
+                        };
+                        
+                        if (audioContext && audioContext.state === 'suspended') {
+                            audioContext.resume().then(doComplete);
+                        } else {
+                            doComplete();
+                        }
+                    } else {
+                        // 更新剩餘時間
+                        console.log('⏱️ 更新剩餘時間:', remaining, '秒');
+                        timerState.timeLeft = remaining;
+                        updateTimerDisplay();
+                        if (timerState.phase !== 'work') {
+                            updateRestModalTimer();
+                        }
+                    }
+                }
+                
+                // 整點模式：檢查是否錯過了提醒
+                if (timerState.mode === 'hourly' && timerState.phase === 'work') {
+                    checkHourlyReminder();
+                }
+                
+                // 無論如何都刷新統計顯示
+                updateStatsDisplay();
+            }
+        });
+
+        // 用戶互動時初始化
+        document.addEventListener('click', () => initAudio(), { once: true });
+        document.addEventListener('touchstart', () => initAudio(), { once: true });
+
+        // 小森平音效 URL 對應表
+        const KOMORI_SOUNDS = {
+            // 活動/慶祝
+            'clap': 'https://taira-komori.net/sound_os2/event01/clapping_short.mp3',
+            'cheers': 'https://taira-komori.net/sound_os2/event01/cheers1.mp3',
+            'cracker': 'https://taira-komori.net/sound_os2/event01/cracker1.mp3',
+            'buzzer': 'https://taira-komori.net/sound_os2/event01/buzzer1.mp3',
+            'firework': 'https://taira-komori.net/sound_os2/event01/firework1.mp3',
+            // 遊戲音效
+            'powerup1': 'https://taira-komori.net/sound_os2/game01/powerup01.mp3',
+            'powerup2': 'https://taira-komori.net/sound_os2/game01/powerup02.mp3',
+            'powerup3': 'https://taira-komori.net/sound_os2/game01/powerup03.mp3',
+            'powerdown1': 'https://taira-komori.net/sound_os2/game01/powerdown01.mp3',
+            'coin1': 'https://taira-komori.net/sound_os2/game01/coin01.mp3',
+            'coin2': 'https://taira-komori.net/sound_os2/game01/coin02.mp3',
+            'coin3': 'https://taira-komori.net/sound_os2/game01/coin03.mp3',
+            'button1': 'https://taira-komori.net/sound_os2/game01/button01a.mp3',
+            'button2': 'https://taira-komori.net/sound_os2/game01/button02a.mp3',
+            'select1': 'https://taira-komori.net/sound_os2/game01/select01.mp3',
+            'select2': 'https://taira-komori.net/sound_os2/game01/select02.mp3',
+            'jump1': 'https://taira-komori.net/sound_os2/game01/jump01.mp3',
+            'jump2': 'https://taira-komori.net/sound_os2/game01/jump02.mp3',
+            'cat1': 'https://taira-komori.net/sound_os2/game01/cat_like1a.mp3',
+            'cat2': 'https://taira-komori.net/sound_os2/game01/cat_like2a.mp3',
+            'blip1': 'https://taira-komori.net/sound_os2/game01/blip01.mp3',
+            'blip2': 'https://taira-komori.net/sound_os2/game01/blip02.mp3',
+            // 樂器
+            'piano': 'https://taira-komori.net/sound_os2/playing01/Mozart1.mp3',
+            'guitar': 'https://taira-komori.net/sound_os2/playing01/guitar1.mp3',
+            'drum': 'https://taira-komori.net/sound_os2/playing01/drum1.mp3',
+            'wadaiko': 'https://taira-komori.net/sound_os2/playing01/Japanese_drum1.mp3',
+            // 撿取
+            'pickup1': 'https://taira-komori.net/sound_os2/game01/pickup01.mp3',
+            'pickup2': 'https://taira-komori.net/sound_os2/game01/pickup02.mp3'
+        };
+
+        const NOTES = {
+            'E4': 329.63, 'C4': 261.63, 'D4': 293.66,
+            'G3': 196.00, 'G4': 392.00, 'A4': 440.00,
+            'B4': 493.88, 'C5': 523.25, 'F4': 349.23
+        };
+
+        function playNote(frequency, startTime, duration, volume = 0.3, type = 'triangle') {
+            if (!audioContext) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.type = type;
+            osc.frequency.value = frequency;
+            
+            gain.gain.setValueAtTime(volume, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        // 播放小森平外部音效（使用 HTML Audio，更可靠）
+        function playKomoriSound(soundKey) {
+            const url = KOMORI_SOUNDS[soundKey];
+            if (!url) return;
+
+            try {
+                // 停止之前的音效
+                if (notificationAudio) {
+                    notificationAudio.pause();
+                    notificationAudio = null;
+                }
+                
+                notificationAudio = new Audio(url);
+                notificationAudio.volume = 0.7;
+                
+                // 使用 play() 的 promise 處理
+                const playPromise = notificationAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('音效播放失敗，嘗試重新播放:', error);
+                        // 嘗試用戶互動後重播
+                    });
+                }
+                
+                console.log('🔊 播放小森平音效:', soundKey);
+            } catch (e) {
+                console.log('小森平音效錯誤:', e);
+            }
+        }
+
+        // 播放 Web Audio 合成音效
+        function playWebAudioSound(chime) {
+            if (!audioContext) initAudio();
+            if (!audioContext) return;
+
+            try {
+                // 確保 context 是運行狀態
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                const now = audioContext.currentTime;
+
+                if (chime === 'westminster') {
+                    playNote(NOTES['E4'], now, 0.6, 0.4);
+                    playNote(NOTES['C4'], now + 0.55, 0.6, 0.4);
+                    playNote(NOTES['D4'], now + 1.1, 0.6, 0.4);
+                    playNote(NOTES['G3'], now + 1.65, 0.8, 0.5);
+                    playNote(NOTES['G3'], now + 2.7, 0.6, 0.4);
+                    playNote(NOTES['D4'], now + 3.25, 0.6, 0.4);
+                    playNote(NOTES['E4'], now + 3.8, 0.6, 0.4);
+                    playNote(NOTES['C4'], now + 4.35, 0.8, 0.5);
+                } else if (chime === 'school') {
+                    for (let i = 0; i < 4; i++) {
+                        playNote(NOTES['G4'], now + i * 0.5, 0.4, 0.5);
+                    }
+                } else if (chime === 'digital') {
+                    playNote(880, now, 0.15, 0.3, 'square');
+                    playNote(880, now + 0.2, 0.15, 0.3, 'square');
+                    playNote(1100, now + 0.4, 0.3, 0.3, 'square');
+                } else if (chime === 'gentle') {
+                    playNote(NOTES['C5'], now, 0.8, 0.2, 'sine');
+                    playNote(NOTES['G4'], now + 0.4, 0.8, 0.2, 'sine');
+                    playNote(NOTES['E4'], now + 0.8, 1.0, 0.2, 'sine');
+                } else if (chime === 'bird') {
+                    playNote(1200, now, 0.1, 0.3, 'sine');
+                    playNote(1400, now + 0.15, 0.1, 0.3, 'sine');
+                    playNote(1100, now + 0.3, 0.15, 0.3, 'sine');
+                    playNote(1300, now + 0.5, 0.1, 0.3, 'sine');
+                    playNote(1500, now + 0.65, 0.2, 0.3, 'sine');
+                }
+            } catch (e) {
+                console.log('Web Audio 播放失敗:', e);
+            }
+        }
+
+        function playSound() {
+            if (!settings.sound) return;
+
+            // 先嘗試恢復 AudioContext
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            if (!audioContext) {
+                initAudio();
+            }
+
+            const chime = settings.chime;
+            const webAudioChimes = ['westminster', 'school', 'digital', 'gentle', 'bird'];
+
+            if (webAudioChimes.includes(chime)) {
+                playWebAudioSound(chime);
+            } else {
+                playKomoriSound(chime);
+            }
+            
+            // 備用：使用系統通知音（確保背景喚醒時能響）
+            playBackupSound();
+        }
+        
+        // 備用音效（使用 HTML Audio，更可靠）
+        function playBackupSound() {
+            try {
+                // 使用一個簡短的 data URI beep 音效
+                const beepDataUri = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp2PfnRwcnh4fnqAhIWHhYWEhIaGhoaGh4eHiIiIiIiIiIiIiIiIiIiHh4eGhoaFhYWEhIODgoKBgYCAgIB/f39/fn5+fX19fX18fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH19fX19fX5+fn5/f39/gICAgYGBgoKCg4ODhISEhYWFhoaGh4eHiIiIiIiIiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYiIiIiIiIiHh4eHh4aGhoaGhYWFhYSEhISDg4OCgoKCgYGBgYCAgIB/f39/fn5+fn19fX19fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH19fX19fX5+fn5+f39/f4CAgICBgYGBgoKCg4ODg4SEhIWFhYWGhoaHh4eHiIiIiIiIiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiIiIiIiIiIeHh4eHhoaGhoWFhYWEhISEg4ODg4KCgoKBgYGBgICAgH9/f39+fn5+fX19fX18fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fX19fX19fn5+fn5/f39/gICAgIGBgYGCgoKDg4ODhISEhYWFhYaGhoeHh4eIiIiIiIiJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmIiIiIiIiIh4eHh4eGhoaGhYWFhYSEhISDg4ODgoKCgoGBgYGAgICAf39/f35+fn59fX19fXx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx9fX19fX1+fn5+fn9/f3+AgICAgYGBgYKCgoODg4OEhISFhYWFhoaGh4eHh4iIiIiIiImJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYiIiIiIiIiHh4eHh4aGhoaFhYWFhISEhIODg4OCgoKCgYGBgYCAgIB/f39/fn5+fn19fX19fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fH19fX19fX5+fn5+f39/f4CAgICBgYGBgoKCg4ODg4SEhIWFhYWGhoaHh4eHiIiIiIiIiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiIiIiIiIiIeHh4eHhoaGhoWFhYWEhISEg4ODg4KCgoKBgYGBgICAgH9/f39+fn5+fX19fX18fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fX19fX19fn5+fn5/f39/gICAgIGBgYGCgoKDg4ODhISEhYWFhYaGhoeHh4eIiIiIiIiJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmIiIiIiIiIh4eHh4eGhoaGhYWFhYSEhISDg4ODgoKCgoGBgYGAgICAf39/f35+fn59fX19fXx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx9fX19fX1+fn5+fn9/f3+AgICAgYGBgYKCgoODg4OEhISFhYWFhoaGh4eHh4iIiIiIiA==';
+                
+                const audio = new Audio(beepDataUri);
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('備用音效播放失敗:', e));
+            } catch (e) {
+                console.log('備用音效錯誤:', e);
+            }
+        }
+
+        function playShortBeep() {
+            if (!settings.sound) return;
+            
+            // 先嘗試恢復 AudioContext
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            if (!audioContext) {
+                initAudio();
+            }
+            
+            if (!audioContext) return;
+            
+            try {
+                const now = audioContext.currentTime;
+                playNote(NOTES['G4'], now, 0.2, 0.3);
+                playNote(NOTES['C5'], now + 0.25, 0.3, 0.3);
+            } catch (e) {
+                console.log('短音效播放失敗:', e);
+            }
+        }
+
+        function testSound() {
+            initAudio();
+            
+            // 如果是小森平音效，給一點延遲讓網路載入
+            const webAudioChimes = ['westminster', 'school', 'digital', 'gentle', 'bird'];
+            const isWebAudio = webAudioChimes.includes(settings.chime);
+            
+            setTimeout(() => {
+                playSound();
+            }, isWebAudio ? 100 : 50);
+            
+            // 顯示音效名稱
+            const chimeNames = {
+                'westminster': '🔔 西敏寺',
+                'school': '🏫 傳統鐘聲',
+                'digital': '📱 數位音',
+                'gentle': '🎐 輕柔鈴聲',
+                'bird': '🐦 鳥鳴',
+                'clap': '👏 掌聲',
+                'cheers': '🎉 歡呼',
+                'cracker': '🎊 響砲',
+                'buzzer': '📢 蜂鳴器',
+                'firework': '🎆 煙火',
+                'powerup1': '⬆️ 升級1',
+                'powerup2': '⬆️ 升級2',
+                'powerup3': '⬆️ 升級3',
+                'powerdown1': '⬇️ 降級',
+                'coin1': '🪙 金幣1',
+                'coin2': '🪙 金幣2',
+                'coin3': '🪙 金幣3',
+                'button1': '🔘 按鈕1',
+                'button2': '🔘 按鈕2',
+                'select1': '👆 選擇1',
+                'select2': '👆 選擇2',
+                'jump1': '🦘 跳躍1',
+                'jump2': '🦘 跳躍2',
+                'cat1': '🐱 貓咪1',
+                'cat2': '🐱 貓咪2',
+                'blip1': '📟 嗶嗶1',
+                'blip2': '📟 嗶嗶2',
+                'piano': '🎹 小星星',
+                'wadaiko': '🥁 太鼓',
+                'pickup1': '✨ 撿取'
+            };
+            
+            showToast('🔊 ' + (chimeNames[settings.chime] || settings.chime));
+        }
+
+        function setChime(type) {
+            settings.chime = type;
+            document.querySelectorAll('.chime-option').forEach(btn => btn.classList.remove('active'));
+            // 找到對應的按鈕並加上 active
+            document.querySelectorAll('.chime-option').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(`'${type}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+            saveSettings();
+            testSound();
+        }
+
+        // ============================================
+        // 語音提醒
+        // ============================================
+        function speak(text) {
+            if (!settings.voice) return;
+            if ('speechSynthesis' in window) {
+                // 先取消之前的語音並喚醒
+                speechSynthesis.cancel();
+                
+                // iOS Safari 需要先喚醒
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                }
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.9;
+                utterance.volume = 1.0;
+                
+                // 確保語音引擎已準備好
+                utterance.onstart = () => console.log('🗣️ 語音開始:', text.substring(0, 20) + '...');
+                utterance.onerror = (e) => console.log('🗣️ 語音錯誤:', e.error);
+                
+                // 嘗試播放
+                try {
+                    speechSynthesis.speak(utterance);
+                    console.log('🗣️ 語音已排入:', text.substring(0, 20) + '...');
+                } catch (e) {
+                    console.log('語音播放失敗，重試中...', e);
+                    setTimeout(() => {
+                        speechSynthesis.cancel();
+                        speechSynthesis.speak(utterance);
+                    }, 100);
+                }
+            }
+        }
+
+        // 強制喚醒語音引擎（用於背景喚醒時）
+        function wakeSpeechSynthesis() {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                }
+                // 播放一個空的語音來喚醒引擎
+                const wake = new SpeechSynthesisUtterance('');
+                wake.volume = 0;
+                speechSynthesis.speak(wake);
+            }
+        }
+
+        // 豐富的完成語音（強制播放，不受語音開關限制）
+        function speakWorkComplete() {
+            const remaining = settings.dailyGoal - stats.todayCount;
+            let message = `恭喜完成一個番茄！今天已完成 ${stats.todayCount} 個`;
+            
+            if (remaining > 0) {
+                message += `，距離目標還有 ${remaining} 個`;
+            } else if (remaining === 0) {
+                message += `，恭喜達成今日目標！`;
+            } else {
+                message += `，超越目標 ${Math.abs(remaining)} 個，太棒了！`;
+            }
+            
+            // 加入鼓勵語
+            const encouragements = [
+                '繼續加油！',
+                '休息一下吧！',
+                '做得好！',
+                '保持專注！',
+                '你很棒！'
+            ];
+            message += encouragements[Math.floor(Math.random() * encouragements.length)];
+            
+            speakForce(message);  // 強制播放
+        }
+
+        // 休息結束語音（強制播放）
+        function speakRestComplete() {
+            const remaining = settings.dailyGoal - stats.todayCount;
+            let message = '休息結束，準備開始工作';
+            
+            if (remaining > 0) {
+                message += `。還需要 ${remaining} 個番茄達成今日目標`;
+            } else {
+                message += `。今日目標已達成，繼續挑戰自己吧`;
+            }
+            
+            speakForce(message);  // 強制播放
+        }
+
+        // 整點提醒語音（強制播放）
+        function speakHourlyReminder() {
+            const now = new Date();
+            const hour = now.getHours();
+            let timeDesc = '';
+            
+            if (hour < 12) {
+                timeDesc = '上午';
+            } else if (hour < 18) {
+                timeDesc = '下午';
+            } else {
+                timeDesc = '晚上';
+            }
+            
+            const remaining = settings.dailyGoal - stats.todayCount;
+            let message = `${timeDesc}好！整點休息時間到了。今天已完成 ${stats.todayCount} 個番茄`;
+            
+            if (remaining > 0) {
+                message += `，還需要 ${remaining} 個達成目標`;
+            } else {
+                message += `，已超越目標！`;
+            }
+            
+            speakForce(message);  // 強制播放
+        }
+        
+        // 強制播放語音（根據設定使用不同服務）
+        function speakForce(text) {
+            console.log('🗣️ 播放語音:', settings.voiceService, text.substring(0, 30) + '...');
+            
+            switch (settings.voiceService) {
+                case 'gemini':
+                    speakWithGemini(text);
+                    break;
+                case 'elevenlabs':
+                    speakWithElevenLabs(text);
+                    break;
+                case 'web':
+                default:
+                    speakWithWebAPI(text);
+                    break;
+            }
+        }
+        
+        // Web Speech API（免費，內建）
+        function speakWithWebAPI(text) {
+            if (!('speechSynthesis' in window)) {
+                console.log('❌ 此瀏覽器不支援 Web Speech API');
+                return;
+            }
+            
+            const doSpeak = () => {
+                speechSynthesis.cancel();
+                if (speechSynthesis.paused) speechSynthesis.resume();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.9;
+                utterance.volume = 1.0;
+                
+                // 根據性別選擇語音
+                const voices = speechSynthesis.getVoices();
+                const zhVoices = voices.filter(v => 
+                    v.lang.includes('zh-TW') || v.lang.includes('zh_TW') ||
+                    v.lang.includes('zh-CN') || v.lang.includes('zh_CN') || v.lang.includes('cmn')
+                );
+                
+                if (zhVoices.length > 0) {
+                    // 嘗試根據性別選擇
+                    const preferredVoice = zhVoices.find(v => {
+                        const name = v.name.toLowerCase();
+                        if (settings.voiceGender === 'female') {
+                            return name.includes('female') || name.includes('女') || name.includes('mei') || name.includes('ting');
+                        } else {
+                            return name.includes('male') || name.includes('男') || !name.includes('female');
+                        }
+                    }) || zhVoices[0];
+                    utterance.voice = preferredVoice;
+                    console.log('🗣️ 使用語音:', preferredVoice.name);
+                }
+                
+                utterance.onstart = () => console.log('🗣️ Web Speech 開始');
+                utterance.onerror = (e) => console.log('🗣️ Web Speech 錯誤:', e.error);
+                utterance.onend = () => console.log('🗣️ Web Speech 結束');
+                
+                speechSynthesis.speak(utterance);
+            };
+            
+            const voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+                speechSynthesis.getVoices();
+            } else {
+                doSpeak();
+            }
+        }
+        
+        // Google Gemini TTS
+        async function speakWithGemini(text) {
+            if (!settings.geminiApiKey) {
+                console.log('❌ 未設定 Gemini API Key，使用 Web Speech');
+                speakWithWebAPI(text);
+                return;
+            }
+            
+            try {
+                // Gemini TTS API
+                const voiceName = settings.voiceGender === 'female' ? 'Aoede' : 'Charon';
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${settings.geminiApiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: text }]
+                        }],
+                        generationConfig: {
+                            response_modalities: ["AUDIO"],
+                            speech_config: {
+                                voice_config: {
+                                    prebuilt_voice_config: {
+                                        voice_name: voiceName
+                                    }
+                                }
+                            }
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Gemini API 錯誤: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 檢查是否有音頻數據
+                if (data.candidates && data.candidates[0]?.content?.parts) {
+                    const audioPart = data.candidates[0].content.parts.find(p => p.inlineData?.mimeType?.includes('audio'));
+                    if (audioPart) {
+                        const audioData = audioPart.inlineData.data;
+                        const audioBlob = base64ToBlob(audioData, audioPart.inlineData.mimeType);
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                        console.log('🤖 Gemini TTS 播放中');
+                        return;
+                    }
+                }
+                
+                throw new Error('Gemini 未返回音頻');
+                
+            } catch (error) {
+                console.error('❌ Gemini TTS 錯誤:', error);
+                showToast('Gemini 語音失敗，使用 Web Speech');
+                speakWithWebAPI(text);
+            }
+        }
+        
+        // ElevenLabs TTS
+        async function speakWithElevenLabs(text) {
+            if (!settings.elevenlabsApiKey) {
+                console.log('❌ 未設定 ElevenLabs API Key，使用 Web Speech');
+                speakWithWebAPI(text);
+                return;
+            }
+            
+            try {
+                // ElevenLabs 預設中文語音 ID
+                // 女聲: Rachel (21m00Tcm4TlvDq8ikWAM) 或其他
+                // 男聲: Adam (pNInz6obpgDQGcFmaJgB)
+                const voiceId = settings.voiceGender === 'female' 
+                    ? '21m00Tcm4TlvDq8ikWAM'  // Rachel
+                    : 'pNInz6obpgDQGcFmaJgB'; // Adam
+                
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'Content-Type': 'application/json',
+                        'xi-api-key': settings.elevenlabsApiKey
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        model_id: 'eleven_multilingual_v2',
+                        voice_settings: {
+                            stability: 0.5,
+                            similarity_boost: 0.75
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`ElevenLabs API 錯誤: ${response.status} - ${errorText}`);
+                }
+                
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play();
+                console.log('🎭 ElevenLabs TTS 播放中');
+                
+            } catch (error) {
+                console.error('❌ ElevenLabs TTS 錯誤:', error);
+                showToast('ElevenLabs 語音失敗，使用 Web Speech');
+                speakWithWebAPI(text);
+            }
+        }
+        
+        // Base64 轉 Blob 工具函數
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        }
+        
+        // 語音服務設定函數
+        function setVoiceService(service) {
+            settings.voiceService = service;
+            
+            // 更新按鈕樣式
+            document.getElementById('voiceServiceWeb').style.borderColor = service === 'web' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            document.getElementById('voiceServiceGemini').style.borderColor = service === 'gemini' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            document.getElementById('voiceServiceElevenLabs').style.borderColor = service === 'elevenlabs' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            
+            // 顯示/隱藏 API Key 輸入區
+            document.getElementById('geminiKeySection').style.display = service === 'gemini' ? 'flex' : 'none';
+            document.getElementById('elevenlabsKeySection').style.display = service === 'elevenlabs' ? 'flex' : 'none';
+            
+            console.log('🎙️ 語音服務:', service);
+        }
+        
+        function setVoiceGender(gender) {
+            settings.voiceGender = gender;
+            
+            // 更新按鈕樣式
+            document.getElementById('voiceGenderFemale').style.borderColor = gender === 'female' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            document.getElementById('voiceGenderMale').style.borderColor = gender === 'male' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            
+            console.log('👤 語音性別:', gender);
+        }
+        
+        function saveVoiceSettings() {
+            settings.geminiApiKey = document.getElementById('geminiApiKey').value.trim();
+            settings.elevenlabsApiKey = document.getElementById('elevenlabsApiKey').value.trim();
+            saveSettings();
+            showToast('✅ 語音設定已儲存');
+        }
+        
+        function testVoiceService() {
+            const testText = `語音測試成功！目前使用 ${
+                settings.voiceService === 'web' ? 'Web Speech' :
+                settings.voiceService === 'gemini' ? 'Google Gemini' : 'ElevenLabs'
+            } ${settings.voiceGender === 'female' ? '女聲' : '男聲'}。今天已完成 ${stats.todayCount} 個番茄。`;
+            
+            showToast('🎙️ 測試語音中...');
+            speakForce(testText);
+        }
+        
+        // 測試語音
+        function testSpeech() {
+            if (!('speechSynthesis' in window)) {
+                showToast('❌ 此瀏覽器不支援語音');
+                return;
+            }
+            
+            // 顯示語音狀態
+            const voices = speechSynthesis.getVoices();
+            console.log('🗣️ 可用語音數量:', voices.length);
+            
+            if (voices.length === 0) {
+                // voices 可能還沒載入，等待一下
+                showToast('⏳ 語音引擎載入中...');
+                speechSynthesis.addEventListener('voiceschanged', function onVoicesChanged() {
+                    speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+                    testSpeech();
+                }, { once: true });
+                
+                // 強制觸發 voices 載入
+                speechSynthesis.getVoices();
+                return;
+            }
+            
+            // 找中文語音
+            const zhVoices = voices.filter(v => v.lang.includes('zh') || v.lang.includes('TW') || v.lang.includes('CN'));
+            console.log('🗣️ 中文語音:', zhVoices.map(v => v.name + ' (' + v.lang + ')'));
+            
+            speechSynthesis.cancel();
+            
+            const testText = `語音測試成功！今天已完成 ${stats.todayCount} 個番茄`;
+            const utterance = new SpeechSynthesisUtterance(testText);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            utterance.volume = 1.0;
+            
+            if (zhVoices.length > 0) {
+                utterance.voice = zhVoices[0];
+            }
+            
+            utterance.onstart = () => showToast('🗣️ 語音播放中...');
+            utterance.onend = () => showToast('✅ 語音測試完成');
+            utterance.onerror = (e) => showToast('❌ 語音錯誤: ' + e.error);
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        // 初始化語音引擎（載入 voices）
+        function initSpeech() {
+            if ('speechSynthesis' in window) {
+                // 預先載入 voices
+                speechSynthesis.getVoices();
+                
+                // 監聽 voices 變化
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    const voices = speechSynthesis.getVoices();
+                    console.log('🗣️ 語音引擎已載入，可用語音:', voices.length);
+                });
+            }
+        }
+        
+        // iOS 需要用戶互動才能播放語音，在第一次點擊時初始化
+        let speechInitialized = false;
+        document.addEventListener('click', function initSpeechOnClick() {
+            if (speechInitialized) return;
+            if ('speechSynthesis' in window) {
+                // 播放一個空的語音來解鎖
+                const unlock = new SpeechSynthesisUtterance('');
+                unlock.volume = 0;
+                speechSynthesis.speak(unlock);
+                speechInitialized = true;
+                console.log('🗣️ 語音引擎已解鎖（用戶互動）');
+            }
+        }, { once: true });
+
+        // ============================================
+        // 通知
+        // ============================================
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(title, body) {
+            if (settings.notification && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: '🍅' });
+            }
+        }
+
+        // ============================================
+        // GAS 伺服器端計時（休眠時也能通知）
+        // ============================================
+        function sendTimerToGAS(phase, minutes) {
+            if (!settings.gasUrl) {
+                console.log('⚠️ 未設定 GAS URL，跳過伺服器端計時');
+                return;
+            }
+            
+            const data = {
+                action: 'startTimer',
+                phase: phase,
+                minutes: minutes,
+                todayCount: stats.todayCount,
+                dailyGoal: settings.dailyGoal
+            };
+            
+            console.log('📤 發送計時到 GAS:', data);
+            
+            fetch(settings.gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',  // GAS 需要
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                console.log('✅ GAS 計時器已設定');
+                showToast(`📡 LINE 將在 ${minutes} 分鐘後通知`);
+            })
+            .catch(error => {
+                console.error('❌ GAS 發送失敗:', error);
+            });
+        }
+        
+        function cancelGASTimer() {
+            if (!settings.gasUrl) return;
+            
+            fetch(settings.gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'cancelTimer' })
+            })
+            .then(() => {
+                console.log('⏹️ GAS 計時器已取消');
+            })
+            .catch(error => {
+                console.error('❌ GAS 取消失敗:', error);
+            });
+        }
+        
+        function testGASNotify() {
+            if (!settings.gasUrl) {
+                showToast('❌ 請先設定 GAS URL');
+                return;
+            }
+            
+            showToast('📤 發送測試通知...');
+            
+            fetch(settings.gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'testNotify' })
+            })
+            .then(() => {
+                showToast('✅ 測試請求已發送，請檢查 LINE');
+            })
+            .catch(error => {
+                console.error('❌ 測試失敗:', error);
+                showToast('❌ 測試失敗: ' + error.message);
+            });
+        }
+
+        // ============================================
+        // 設定
+        // ============================================
+        function toggleSwitch(type) {
+            const switchEl = document.getElementById('switch' + type.charAt(0).toUpperCase() + type.slice(1));
+            switchEl.classList.toggle('active');
+            settings[type] = switchEl.classList.contains('active');
+            saveSettings();
+        }
+
+        function setTheme(theme) {
+            settings.theme = theme;
+            document.querySelectorAll('.theme-option').forEach(t => t.classList.remove('active'));
+            // 找到對應的按鈕並加上 active
+            document.querySelectorAll('.theme-option').forEach(t => {
+                if (t.classList.contains(theme)) {
+                    t.classList.add('active');
+                }
+            });
+            
+            if (theme === 'dark') {
+                document.body.removeAttribute('data-theme');
+            } else {
+                document.body.setAttribute('data-theme', theme);
+            }
+            saveSettings();
+        }
+
+        // ============================================
+        // Wake Lock API（螢幕長亮）
+        // ============================================
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator)) {
+                console.log('❌ 此瀏覽器不支援 Wake Lock API');
+                showToast('❌ 此裝置不支援螢幕長亮功能');
+                return false;
+            }
+            
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('🔆 螢幕長亮已啟用');
+                
+                wakeLock.addEventListener('release', () => {
+                    console.log('🔅 螢幕長亮已釋放');
+                    updateWakeLockStatus(false);
+                });
+                
+                updateWakeLockStatus(true);
+                return true;
+            } catch (err) {
+                console.log('Wake Lock 請求失敗:', err);
+                showToast('❌ 無法啟用螢幕長亮：' + err.message);
+                return false;
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log('🔅 手動釋放螢幕長亮');
+            }
+            updateWakeLockStatus(false);
+        }
+
+        function updateWakeLockStatus(active) {
+            const statusEl = document.getElementById('wakeLockStatus');
+            if (statusEl) {
+                if (active) {
+                    statusEl.textContent = '🔆 螢幕長亮已啟用（計時中保持）';
+                    statusEl.style.display = 'block';
+                    statusEl.style.color = 'var(--accent)';
+                } else {
+                    statusEl.style.display = 'none';
+                }
+            }
+        }
+
+        function setScreenMode(mode) {
+            settings.screenMode = mode;
+            
+            // 更新 UI
+            document.getElementById('modeBackground').style.borderColor = mode === 'background' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            document.getElementById('modeAwake').style.borderColor = mode === 'awake' ? 'var(--accent)' : 'var(--bg-tertiary)';
+            
+            if (mode === 'awake') {
+                // 如果計時中，立即啟用
+                if (timerState.isRunning) {
+                    requestWakeLock();
+                }
+                showToast('☀️ 螢幕長亮模式：計時時螢幕不會休眠');
+            } else {
+                releaseWakeLock();
+                showToast('🌙 背景執行模式：省電但喚醒可能延遲');
+            }
+            
+            saveSettings();
+        }
+
+        // 計時開始時根據設定啟用 Wake Lock
+        function handleWakeLockOnTimerStart() {
+            if (settings.screenMode === 'awake') {
+                requestWakeLock();
+            }
+        }
+
+        // 計時結束時釋放 Wake Lock
+        function handleWakeLockOnTimerStop() {
+            if (settings.screenMode === 'awake' && wakeLock) {
+                // 延遲釋放，讓用戶看到結果
+                setTimeout(() => {
+                    if (!timerState.isRunning) {
+                        releaseWakeLock();
+                    }
+                }, 5000);
+            }
+        }
+
+        // 頁面可見時重新請求 Wake Lock（系統可能會自動釋放）
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                if (settings.screenMode === 'awake' && timerState.isRunning && !wakeLock) {
+                    await requestWakeLock();
+                }
+            }
+        });
+
+        function loadSettings() {
+            const saved = localStorage.getItem('pomodoroProSettings');
+            if (saved) {
+                settings = { ...settings, ...JSON.parse(saved) };
+            }
+
+            // 更新 UI
+            document.getElementById('workDuration').value = settings.workDuration;
+            document.getElementById('shortBreak').value = settings.shortBreak;
+            document.getElementById('longBreak').value = settings.longBreak;
+            document.getElementById('longBreakInterval').value = settings.longBreakInterval;
+            document.getElementById('hourlyMinute').value = settings.hourlyMinute;
+            document.getElementById('classTime').value = settings.classTime;
+            document.getElementById('breakTime').value = settings.breakTime;
+            document.getElementById('sleepStart').value = settings.sleepStart;
+            document.getElementById('sleepEnd').value = settings.sleepEnd;
+            document.getElementById('sleepReminder').value = settings.sleepReminder;
+            document.getElementById('gasUrl').value = settings.gasUrl || '';
+
+            document.getElementById('switchNotification').classList.toggle('active', settings.notification);
+            document.getElementById('switchSound').classList.toggle('active', settings.sound);
+            document.getElementById('switchVoice').classList.toggle('active', settings.voice);
+            document.getElementById('switchVibrate').classList.toggle('active', settings.vibrate);
+            
+            // 每日目標
+            document.getElementById('dailyGoal').value = settings.dailyGoal;
+
+            // 主題
+            if (settings.theme !== 'dark') {
+                document.body.setAttribute('data-theme', settings.theme);
+            }
+            document.querySelectorAll('.theme-option').forEach(t => {
+                t.classList.toggle('active', t.classList.contains(settings.theme));
+            });
+
+            // 鐘聲 - 使用 onclick 屬性來匹配
+            document.querySelectorAll('.chime-option').forEach(btn => {
+                const onclick = btn.getAttribute('onclick') || '';
+                const match = onclick.match(/setChime\('([^']+)'\)/);
+                if (match) {
+                    btn.classList.toggle('active', match[1] === settings.chime);
+                }
+            });
+
+            // 執行模式
+            if (settings.screenMode === 'awake') {
+                document.getElementById('modeBackground').style.borderColor = 'var(--bg-tertiary)';
+                document.getElementById('modeAwake').style.borderColor = 'var(--accent)';
+            } else {
+                document.getElementById('modeBackground').style.borderColor = 'var(--accent)';
+                document.getElementById('modeAwake').style.borderColor = 'var(--bg-tertiary)';
+            }
+
+            // 語音服務設定
+            setVoiceService(settings.voiceService || 'web');
+            setVoiceGender(settings.voiceGender || 'female');
+            document.getElementById('geminiApiKey').value = settings.geminiApiKey || '';
+            document.getElementById('elevenlabsApiKey').value = settings.elevenlabsApiKey || '';
+
+            // 更新計時器
+            timerState.timeLeft = settings.workDuration * 60;
+            timerState.totalTime = settings.workDuration * 60;
+
+            document.getElementById('soundBtn').textContent = settings.sound ? '🔔' : '🔕';
+        }
+
+        function saveSettings() {
+            settings.workDuration = parseInt(document.getElementById('workDuration').value) || 25;
+            settings.shortBreak = parseInt(document.getElementById('shortBreak').value) || 5;
+            settings.longBreak = parseInt(document.getElementById('longBreak').value) || 15;
+            settings.longBreakInterval = parseInt(document.getElementById('longBreakInterval').value) || 4;
+            settings.hourlyMinute = parseInt(document.getElementById('hourlyMinute').value) || 55;
+            settings.classTime = parseInt(document.getElementById('classTime').value) || 45;
+            settings.breakTime = parseInt(document.getElementById('breakTime').value) || 10;
+            settings.sleepStart = document.getElementById('sleepStart').value || '00:00';
+            settings.sleepEnd = document.getElementById('sleepEnd').value || '06:00';
+            settings.sleepReminder = document.getElementById('sleepReminder').value || '21:45';
+
+            localStorage.setItem('pomodoroProSettings', JSON.stringify(settings));
+        }
+
+        function saveAllSettings() {
+            saveSettings();
+            
+            if (!timerState.isRunning) {
+                if (timerState.mode === 'countdown') {
+                    timerState.timeLeft = settings.workDuration * 60;
+                    timerState.totalTime = settings.workDuration * 60;
+                } else if (timerState.mode === 'classroom') {
+                    timerState.timeLeft = settings.classTime * 60;
+                    timerState.totalTime = settings.classTime * 60;
+                }
+                updateTimerDisplay();
+            }
+
+            showToast('✅ 設定已儲存');
+        }
+
+        function saveGasUrl() {
+            settings.gasUrl = document.getElementById('gasUrl').value.trim();
+            saveSettings();
+            showToast('✅ GAS URL 已儲存');
+        }
+
+        async function testGas() {
+            const url = settings.gasUrl;
+            if (!url) {
+                showToast('❌ 請先填入 GAS URL');
+                return;
+            }
+            
+            showToast('📤 正在發送 LINE 測試通知...');
+            
+            try {
+                // 使用 no-cors 模式（GAS 需要）
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'testNotify' })
+                });
+                
+                showToast('✅ 測試請求已發送，請檢查 LINE！');
+            } catch (error) {
+                console.error('GAS 測試錯誤:', error);
+                showToast('❌ 連線失敗，請檢查 URL');
+            }
+        }
+
+        // ============================================
+        // 統計
+        // ============================================
+        function loadStats() {
+            const saved = localStorage.getItem('pomodoroProStats');
+            if (saved) {
+                stats = { ...stats, ...JSON.parse(saved) };
+            }
+
+            const today = new Date().toDateString();
+            if (stats.lastDate !== today) {
+                // 儲存昨天的資料到歷史
+                if (stats.lastDate && stats.todayCount > 0) {
+                    stats.history.push({
+                        date: formatDate(new Date(stats.lastDate)),
+                        count: stats.todayCount,
+                        minutes: stats.todayMinutes
+                    });
+                    
+                    // 更新週數據
+                    stats.weeklyData.shift();
+                    stats.weeklyData.push(stats.todayMinutes);
+
+                    // 檢查連續天數
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (stats.lastDate === yesterday.toDateString()) {
+                        stats.streak++;
+                        if (stats.streak > stats.bestStreak) {
+                            stats.bestStreak = stats.streak;
+                        }
+                    } else {
+                        stats.streak = 0;
+                    }
+                }
+
+                stats.lastDate = today;
+                stats.todayCount = 0;
+                stats.todayMinutes = 0;
+                saveStats();
+            }
+        }
+
+        function saveStats() {
+            localStorage.setItem('pomodoroProStats', JSON.stringify(stats));
+        }
+
+        // ============================================
+        // 計時狀態保存（用於背景恢復）
+        // ============================================
+        function saveTimerState() {
+            if (timerState.isRunning && timerState.endTime) {
+                const stateToSave = {
+                    mode: timerState.mode,
+                    phase: timerState.phase,
+                    endTime: timerState.endTime,
+                    totalTime: timerState.totalTime,
+                    pomodoroCount: timerState.pomodoroCount,
+                    sessionCount: timerState.sessionCount
+                };
+                localStorage.setItem('pomodoroProTimerState', JSON.stringify(stateToSave));
+                console.log('💾 計時狀態已保存');
+            }
+        }
+
+        function loadTimerState() {
+            const saved = localStorage.getItem('pomodoroProTimerState');
+            if (!saved) return;
+            
+            try {
+                const state = JSON.parse(saved);
+                const now = Date.now();
+                const remaining = Math.ceil((state.endTime - now) / 1000);
+                
+                console.log('📂 載入計時狀態, 剩餘:', remaining, '秒');
+                
+                if (remaining > 0) {
+                    // 計時還沒結束，恢復狀態
+                    timerState.mode = state.mode;
+                    timerState.phase = state.phase;
+                    timerState.endTime = state.endTime;
+                    timerState.totalTime = state.totalTime;
+                    timerState.timeLeft = remaining;
+                    timerState.pomodoroCount = state.pomodoroCount || 0;
+                    timerState.sessionCount = state.sessionCount || 0;
+                    timerState.isRunning = true;
+                    
+                    // 重新啟動計時器
+                    updateTimerDisplay();
+                    updateTimerStyle();
+                    updateStartButton();
+                    
+                    if (timerState.phase !== 'work') {
+                        showRestModal();
+                        startBreathingAnimation();
+                    }
+                    
+                    // 重新啟動 interval
+                    timerInterval = setInterval(() => {
+                        const now = Date.now();
+                        const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
+                        timerState.timeLeft = remaining;
+                        updateTimerDisplay();
+                        
+                        if (timerState.phase !== 'work') {
+                            updateRestModalTimer();
+                        }
+                        
+                        if (timerState.timeLeft <= 0) {
+                            handleTimerComplete();
+                        }
+                    }, 1000);
+                    
+                    showToast(`⏱️ 恢復計時中，剩餘 ${Math.floor(remaining/60)}:${(remaining%60).toString().padStart(2,'0')}`);
+                    
+                } else if (remaining <= 0 && remaining > -3600) {
+                    // 計時已結束（1小時內），觸發完成
+                    timerState.mode = state.mode;
+                    timerState.phase = state.phase;
+                    timerState.totalTime = state.totalTime;
+                    timerState.pomodoroCount = state.pomodoroCount || 0;
+                    timerState.sessionCount = state.sessionCount || 0;
+                    timerState.timeLeft = 0;
+                    
+                    console.log('⏰ 背景計時已完成，觸發完成邏輯');
+                    handleTimerComplete();
+                }
+                
+                // 清除保存的狀態
+                clearTimerState();
+                
+            } catch (e) {
+                console.log('載入計時狀態失敗:', e);
+                clearTimerState();
+            }
+        }
+
+        function clearTimerState() {
+            localStorage.removeItem('pomodoroProTimerState');
+        }
+
+        // 頁面關閉前保存狀態
+        window.addEventListener('beforeunload', function() {
+            if (timerState.isRunning && timerState.endTime) {
+                saveTimerState();
+            }
+        });
+
+        // 頁面隱藏時保存狀態（手機切換 app）
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                if (timerState.isRunning && timerState.endTime) {
+                    saveTimerState();
+                }
+            }
+        });
+
+        function formatDate(date) {
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+        }
+
+        // ============================================
+        // 待辦事項儲存
+        // ============================================
+        function loadTodos() {
+            const saved = localStorage.getItem('pomodoroProTodos');
+            if (saved) {
+                todos = JSON.parse(saved);
+            }
+        }
+
+        function saveTodos() {
+            localStorage.setItem('pomodoroProTodos', JSON.stringify(todos));
+        }
+
+        // ============================================
+        // 匯出統計
+        // ============================================
+        function exportStats() {
+            let csv = '日期,番茄數,專注分鐘\n';
+            stats.history.forEach(item => {
+                csv += `${item.date},${item.count},${item.minutes}\n`;
+            });
+            csv += `今日,${stats.todayCount},${stats.todayMinutes}\n`;
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `番茄鐘統計_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+
+            showToast('📤 統計已匯出');
+        }
+
+        // ============================================
+        // 全螢幕
+        // ============================================
+        function toggleFullscreen() {
+            const isFullscreen = document.body.classList.contains('fullscreen-mode');
+            
+            if (!isFullscreen) {
+                // 進入全螢幕模式
+                document.body.classList.add('fullscreen-mode');
+                
+                // 嘗試使用原生全螢幕 API（桌面瀏覽器）
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                }
+                
+                showToast('⛶ 全螢幕模式（點擊計時器退出）');
+            } else {
+                // 退出全螢幕模式
+                document.body.classList.remove('fullscreen-mode');
+                
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                
+                showToast('退出全螢幕');
+            }
+        }
+
+        function exitFullscreenOnClick() {
+            // 只在全螢幕模式下點擊計時器才退出
+            if (document.body.classList.contains('fullscreen-mode')) {
+                toggleFullscreen();
+            }
+        }
+
+        // ============================================
+        // 快捷鍵
+        // ============================================
+        function bindKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // 忽略輸入框
+                if (e.target.tagName === 'INPUT') return;
+
+                switch (e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        toggleTimer();
+                        break;
+                    case 'KeyR':
+                        resetTimer();
+                        break;
+                    case 'KeyF':
+                        toggleFullscreen();
+                        break;
+                    case 'KeyM':
+                        toggleSound();
+                        break;
+                    case 'Escape':
+                        if (document.body.classList.contains('fullscreen-mode')) {
+                            toggleFullscreen();
+                        }
+                        break;
+                }
+            });
+        }
+
+        function showShortcuts() {
+            showToast('⌨️ Space:開始 | R:重置 | F:全螢幕 | M:靜音');
+        }
+
+        function toggleSound() {
+            settings.sound = !settings.sound;
+            document.getElementById('soundBtn').textContent = settings.sound ? '🔔' : '🔕';
+            document.getElementById('switchSound').classList.toggle('active', settings.sound);
+            showToast(settings.sound ? '🔔 音效已開啟' : '🔕 音效已關閉');
+            saveSettings();
+        }
+
+        // ============================================
+        // 測試休息倒數
+        // ============================================
+        function testRestCountdown() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            switchPage('timer');
+            document.querySelectorAll('.tab-item')[0].classList.add('active');
+            
+            playSound();
+
+            timerState.phase = 'rest';
+            timerState.isRunning = true;
+            timerState.timeLeft = 10;
+            timerState.totalTime = 10;
+            timerState.endTime = Date.now() + 10 * 1000;
+
+            document.getElementById('timerLabel').textContent = '測試休息';
+            updateTimerDisplay();
+            updateTimerStyle();
+            showRestModal();
+
+            timerInterval = setInterval(function() {
+                // 用時間戳計算剩餘時間
+                const now = Date.now();
+                const remaining = Math.max(0, Math.ceil((timerState.endTime - now) / 1000));
+                timerState.timeLeft = remaining;
+                updateTimerDisplay();
+                updateRestModalTimer();
+                
+                if (timerState.timeLeft <= 0) {
+                    endRest();
+                    showToast('✅ 測試完成！');
+                }
+            }, 1000);
+
+            showToast('⏱️ 開始 10 秒測試');
+        }
+
+        // ============================================
+        // 清除資料
+        // ============================================
+        function clearAllData() {
+            if (confirm('確定要清除所有資料嗎？這將無法復原！')) {
+                localStorage.removeItem('pomodoroProSettings');
+                localStorage.removeItem('pomodoroProStats');
+                localStorage.removeItem('pomodoroProTodos');
+                location.reload();
+            }
+        }
+
+        // ============================================
+        // Toast
+        // ============================================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
