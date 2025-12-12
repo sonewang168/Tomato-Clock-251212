@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.2</div>
+        <div class="splash-version">Pro v5.3</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.2</span>
+                    <span style="color:var(--text-secondary);">Pro v5.3</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -2357,9 +2357,15 @@
 
                 // 🗣️ 語音優先（更可靠），音效延遲播放
                 sendNotification('🍅 工作完成！', `今日 ${stats.todayCount}/${settings.dailyGoal} 個番茄`);
-                speakWorkComplete();
+                
+                // 確保語音播放（延遲一點讓 UI 先更新）
+                setTimeout(() => {
+                    console.log('⏰ 觸發工作完成語音和 LINE');
+                    speakWorkComplete();
+                }, 100);
+                
                 if (!skipSound) {
-                    setTimeout(() => playSound(), 500); // 語音後播音效
+                    setTimeout(() => playSound(), 600); // 語音後播音效
                 }
 
                 // 判斷是否長休息
@@ -2402,8 +2408,14 @@
 
                 // 🗣️ 語音優先，音效延遲
                 sendNotification('☕ 休息結束！', '準備開始工作');
-                speakRestComplete();
-                setTimeout(() => playShortBeep(), 500);
+                
+                // 確保語音播放（延遲一點讓 UI 先更新）
+                setTimeout(() => {
+                    console.log('⏰ 觸發休息結束語音和 LINE');
+                    speakRestComplete();
+                }, 100);
+                
+                setTimeout(() => playShortBeep(), 600);
                 
                 hideRestModal();
                 updateTimerStyle();
@@ -3625,7 +3637,11 @@
             ];
             message += encouragements[Math.floor(Math.random() * encouragements.length)];
             
-            speakForce(message);  // 強制播放
+            console.log('🗣️ 播放工作完成語音:', message);
+            speakForce(message);
+            
+            // 同步發送 LINE 通知
+            sendLineNotifyNow('work');
         }
 
         // 休息結束語音（強制播放）
@@ -3639,7 +3655,34 @@
                 message += `。今日目標已達成，繼續挑戰自己吧`;
             }
             
-            speakForce(message);  // 強制播放
+            console.log('🗣️ 播放休息結束語音:', message);
+            speakForce(message);
+            
+            // 同步發送 LINE 通知
+            sendLineNotifyNow('rest');
+        }
+        
+        // 直接發送 LINE 通知（不透過 GAS 觸發器）
+        function sendLineNotifyNow(phase) {
+            if (!settings.gasUrl) return;
+            
+            const data = {
+                action: 'sendNow',
+                phase: phase,
+                todayCount: stats.todayCount,
+                dailyGoal: settings.dailyGoal
+            };
+            
+            console.log('📤 直接發送 LINE 通知:', data);
+            
+            fetch(settings.gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(error => {
+                console.error('❌ LINE 通知發送失敗:', error);
+            });
         }
 
         // 整點提醒語音（強制播放）
@@ -3670,32 +3713,65 @@
         
         // 強制播放語音（根據設定使用不同服務）
         function speakForce(text) {
-            console.log('🗣️ 播放語音:', settings.voiceService, text.substring(0, 30) + '...');
+            console.log('🗣️ speakForce 被調用');
+            console.log('🗣️ 語音服務:', settings.voiceService);
+            console.log('🗣️ 文字:', text.substring(0, 50) + '...');
             
-            switch (settings.voiceService) {
-                case 'gemini':
-                    speakWithGemini(text);
-                    break;
-                case 'elevenlabs':
-                    speakWithElevenLabs(text);
-                    break;
-                case 'web':
-                default:
-                    speakWithWebAPI(text);
-                    break;
+            // 顯示 Toast 確認語音被觸發
+            showToast('🗣️ 播放語音中...');
+            
+            try {
+                switch (settings.voiceService) {
+                    case 'gemini':
+                        if (settings.geminiApiKey) {
+                            console.log('🤖 使用 Gemini TTS');
+                            speakWithGemini(text);
+                        } else {
+                            console.log('⚠️ Gemini API Key 未設定，使用 Web Speech');
+                            speakWithWebAPI(text);
+                        }
+                        break;
+                    case 'elevenlabs':
+                        if (settings.elevenlabsApiKey) {
+                            console.log('🎭 使用 ElevenLabs TTS');
+                            speakWithElevenLabs(text);
+                        } else {
+                            console.log('⚠️ ElevenLabs API Key 未設定，使用 Web Speech');
+                            speakWithWebAPI(text);
+                        }
+                        break;
+                    case 'web':
+                    default:
+                        console.log('🌐 使用 Web Speech API');
+                        speakWithWebAPI(text);
+                        break;
+                }
+            } catch (error) {
+                console.error('❌ speakForce 錯誤:', error);
+                showToast('❌ 語音播放失敗');
+                // Fallback 到 Web Speech
+                speakWithWebAPI(text);
             }
         }
         
         // Web Speech API（免費，內建）
         function speakWithWebAPI(text) {
+            console.log('🌐 speakWithWebAPI 被調用');
+            
             if (!('speechSynthesis' in window)) {
                 console.log('❌ 此瀏覽器不支援 Web Speech API');
+                showToast('❌ 瀏覽器不支援語音');
                 return;
             }
             
+            // 先喚醒語音引擎
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+            }
+            speechSynthesis.cancel();
+            
             const doSpeak = () => {
-                speechSynthesis.cancel();
-                if (speechSynthesis.paused) speechSynthesis.resume();
+                console.log('🌐 doSpeak 執行');
                 
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-TW';
@@ -3704,10 +3780,13 @@
                 
                 // 根據性別選擇語音
                 const voices = speechSynthesis.getVoices();
+                console.log('🌐 可用語音數:', voices.length);
+                
                 const zhVoices = voices.filter(v => 
                     v.lang.includes('zh-TW') || v.lang.includes('zh_TW') ||
                     v.lang.includes('zh-CN') || v.lang.includes('zh_CN') || v.lang.includes('cmn')
                 );
+                console.log('🌐 中文語音數:', zhVoices.length);
                 
                 if (zhVoices.length > 0) {
                     // 嘗試根據性別選擇
@@ -3720,20 +3799,41 @@
                         }
                     }) || zhVoices[0];
                     utterance.voice = preferredVoice;
-                    console.log('🗣️ 使用語音:', preferredVoice.name);
+                    console.log('🌐 使用語音:', preferredVoice.name);
                 }
                 
-                utterance.onstart = () => console.log('🗣️ Web Speech 開始');
-                utterance.onerror = (e) => console.log('🗣️ Web Speech 錯誤:', e.error);
-                utterance.onend = () => console.log('🗣️ Web Speech 結束');
+                utterance.onstart = () => {
+                    console.log('🗣️ Web Speech 開始播放');
+                    showToast('🗣️ 語音播放中');
+                };
+                utterance.onerror = (e) => {
+                    console.log('🗣️ Web Speech 錯誤:', e.error);
+                    showToast('❌ 語音錯誤: ' + e.error);
+                };
+                utterance.onend = () => {
+                    console.log('🗣️ Web Speech 播放完成');
+                };
                 
                 speechSynthesis.speak(utterance);
+                console.log('🌐 已排入語音佇列');
             };
             
             const voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
-                speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+                console.log('🌐 等待語音載入...');
+                // 等待語音載入
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    console.log('🌐 語音已載入');
+                    doSpeak();
+                }, { once: true });
+                // 觸發載入
                 speechSynthesis.getVoices();
+                // 如果 1 秒後還沒載入，強制執行
+                setTimeout(() => {
+                    if (speechSynthesis.getVoices().length > 0) {
+                        doSpeak();
+                    }
+                }, 1000);
             } else {
                 doSpeak();
             }

@@ -27,6 +27,9 @@ function doPost(e) {
       case 'getStatus':
         return handleGetStatus();
       
+      case 'sendNow':
+        return handleSendNow(data);
+      
       default:
         return jsonResponse({ success: false, error: '未知的 action' });
     }
@@ -34,6 +37,47 @@ function doPost(e) {
     console.error('doPost 錯誤:', error);
     return jsonResponse({ success: false, error: error.message });
   }
+}
+
+// ============================================
+// 直接發送 LINE 通知（完成時立即發送）
+// ============================================
+function handleSendNow(data) {
+  const phase = data.phase || 'work';
+  const todayCount = data.todayCount || 0;
+  const dailyGoal = data.dailyGoal || 8;
+  
+  var message = '';
+  
+  if (phase === 'work') {
+    var remaining = dailyGoal - todayCount;
+    message = '🍅 番茄完成！\n\n';
+    message += '✅ 今天已完成 ' + todayCount + ' 個番茄\n';
+    
+    if (remaining > 0) {
+      message += '🎯 距離目標還有 ' + remaining + ' 個\n';
+    } else if (remaining === 0) {
+      message += '🎉 恭喜達成今日目標！\n';
+    } else {
+      message += '🏆 超越目標 ' + Math.abs(remaining) + ' 個！\n';
+    }
+    message += '\n☕ 休息一下吧！';
+  } else {
+    var remaining = dailyGoal - todayCount;
+    message = '☕ 休息結束！\n\n';
+    message += '📊 今天已完成 ' + todayCount + ' 個番茄\n';
+    if (remaining > 0) {
+      message += '🎯 還需要 ' + remaining + ' 個達成目標\n';
+    } else {
+      message += '🏆 今日目標已達成！\n';
+    }
+    message += '\n💪 準備開始工作！';
+  }
+  
+  var result = sendLineMessage(message);
+  console.log('直接發送 LINE:', result.success ? '成功' : '失敗');
+  
+  return jsonResponse({ success: result.success });
 }
 
 function doGet(e) {
