@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.4.2</div>
+        <div class="splash-version">Pro v5.4.3</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.4.2</span>
+                    <span style="color:var(--text-secondary);">Pro v5.4.3</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -3658,12 +3658,13 @@
             const encouragements = ['繼續加油！', '休息一下吧！', '做得好！', '保持專注！', '你很棒！'];
             message += encouragements[Math.floor(Math.random() * encouragements.length)];
             
-            // 倒數結束時強制使用 Web Speech（iOS 限制異步音頻）
+            // 工作完成：強制使用 Web Speech（iOS setInterval 限制）
+            console.log('🗣️ 工作完成 → Web Speech');
             speakWithWebAPI(message);
             sendLineNotifyNow('work');
         }
 
-        // 休息結束語音（倒數結束時強制 Web Speech）
+        // 休息結束語音（使用選擇的語音服務：Gemini / ElevenLabs / Web）
         function speakRestComplete() {
             const remaining = settings.dailyGoal - stats.todayCount;
             let message = '休息結束，準備開始工作';
@@ -3672,8 +3673,9 @@
                 message += `，還需要 ${remaining} 個番茄達成目標`;
             }
             
-            // 倒數結束時強制使用 Web Speech（iOS 限制異步音頻）
-            speakWithWebAPI(message);
+            // 休息結束：使用選擇的語音服務（Gemini / ElevenLabs / Web）
+            console.log('🗣️ 休息結束 → speakForce:', settings.voiceService);
+            speakForce(message);
             sendLineNotifyNow('rest');
         }
         
