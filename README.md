@@ -134,6 +134,11 @@ const LINE_USER_ID = '你的 User ID';
 
 ## 📝 版本歷史
 
+### v5.4.5 (2024-12-13)
+- 🗣️ 整點模式：整點提醒強制使用 Web Speech（iOS 限制）
+- 🗣️ 休息結束：自動倒數完成用 Web Speech，手動點擊可用 Gemini/ElevenLabs
+- 🔧 修復 iOS setInterval 中異步音頻無法播放問題
+
 ### v5.4.4 (2024-12-13)
 - 🕐 整點模式加入 LINE 通知
 - 🏫 課堂模式完整支援語音 + LINE

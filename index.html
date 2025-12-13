@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.4.4</div>
+        <div class="splash-version">Pro v5.4.5</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.4.4</span>
+                    <span style="color:var(--text-secondary);">Pro v5.4.5</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -2007,7 +2007,7 @@
             <div class="rest-modal-activity-icon">🚶</div>
             <div class="rest-modal-activity-text">站起來走走</div>
         </div>
-        <button class="rest-modal-btn" onclick="endRest()">結束休息，繼續工作</button>
+        <button class="rest-modal-btn" onclick="endRest(true)">結束休息，繼續工作</button>
     </div>
 
     <!-- Toast -->
@@ -2908,15 +2908,23 @@
                 `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        function endRest() {
+        function endRest(isManual = false) {
             clearInterval(timerInterval);
             timerState.isRunning = false;
             timerState.phase = 'work';
             timerState.endTime = null;
             hideRestModal();
             
-            // 🗣️ 語音優先
-            speakRestComplete();
+            // 🗣️ 語音（根據觸發方式決定）
+            if (isManual) {
+                // 手動點擊：可以用選擇的語音服務
+                console.log('🗣️ 休息結束（手動）→ speakForce');
+                speakRestComplete();
+            } else {
+                // 自動倒數完成：強制使用 Web Speech（iOS setInterval 限制）
+                console.log('🗣️ 休息結束（自動）→ Web Speech');
+                speakRestCompleteWebOnly();
+            }
             setTimeout(() => playShortBeep(), 500);
             
             // 震動
@@ -3682,6 +3690,21 @@
             sendLineNotifyNow('rest');
         }
         
+        // 休息結束語音（強制 Web Speech，用於 setInterval 自動觸發）
+        function speakRestCompleteWebOnly() {
+            const remaining = settings.dailyGoal - stats.todayCount;
+            let message = '休息結束，準備開始工作';
+            
+            if (remaining > 0) {
+                message += `，還需要 ${remaining} 個番茄達成目標`;
+            }
+            
+            // 強制使用 Web Speech（iOS setInterval 限制）
+            console.log('🗣️ 休息結束 → Web Speech');
+            speakWithWebAPI(message);
+            sendLineNotifyNow('rest');
+        }
+        
         // 直接發送 LINE 通知（不透過 GAS 觸發器）
         function sendLineNotifyNow(phase) {
             if (!settings.gasUrl) return;
@@ -3705,7 +3728,7 @@
             });
         }
 
-        // 整點提醒語音（強制播放）
+        // 整點提醒語音（強制使用 Web Speech，因為是 setInterval 觸發）
         function speakHourlyReminder() {
             const now = new Date();
             const hour = now.getHours();
@@ -3728,7 +3751,9 @@
                 message += `，已超越目標！`;
             }
             
-            speakForce(message);  // 強制播放
+            // 整點提醒：強制使用 Web Speech（iOS setInterval 限制）
+            console.log('🗣️ 整點提醒 → Web Speech');
+            speakWithWebAPI(message);
         }
         
         // 強制播放語音（根據設定使用不同服務）
