@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.4.1</div>
+        <div class="splash-version">Pro v5.4.2</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.4.1</span>
+                    <span style="color:var(--text-secondary);">Pro v5.4.2</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -3642,7 +3642,7 @@
             }
         }, { once: true });
         
-        // 工作完成語音
+        // 工作完成語音（倒數結束時強制 Web Speech）
         function speakWorkComplete() {
             const remaining = settings.dailyGoal - stats.todayCount;
             let message = `恭喜完成一個番茄！今天已完成 ${stats.todayCount} 個`;
@@ -3658,11 +3658,12 @@
             const encouragements = ['繼續加油！', '休息一下吧！', '做得好！', '保持專注！', '你很棒！'];
             message += encouragements[Math.floor(Math.random() * encouragements.length)];
             
-            speakForce(message);
+            // 倒數結束時強制使用 Web Speech（iOS 限制異步音頻）
+            speakWithWebAPI(message);
             sendLineNotifyNow('work');
         }
 
-        // 休息結束語音
+        // 休息結束語音（倒數結束時強制 Web Speech）
         function speakRestComplete() {
             const remaining = settings.dailyGoal - stats.todayCount;
             let message = '休息結束，準備開始工作';
@@ -3671,7 +3672,8 @@
                 message += `，還需要 ${remaining} 個番茄達成目標`;
             }
             
-            speakForce(message);
+            // 倒數結束時強制使用 Web Speech（iOS 限制異步音頻）
+            speakWithWebAPI(message);
             sendLineNotifyNow('rest');
         }
         
@@ -3750,57 +3752,42 @@
             }
         }
         
-        // Web Speech API（參考原檔案）
+        // Web Speech API（簡化版，參考原檔案）
         function speakWithWebAPI(text) {
             if (!('speechSynthesis' in window)) {
                 console.log('❌ 此瀏覽器不支援語音');
                 return;
             }
             
-            const doSpeak = () => {
-                // 先取消之前的語音
-                speechSynthesis.cancel();
-                
-                if (speechSynthesis.paused) {
-                    speechSynthesis.resume();
-                }
-                
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 0.9;
-                utterance.volume = 1.0;
-                
-                // 嘗試使用中文語音
-                const voices = speechSynthesis.getVoices();
-                const zhVoice = voices.find(v => 
-                    v.lang.includes('zh-TW') || 
-                    v.lang.includes('zh_TW') ||
-                    v.lang.includes('zh-CN') ||
-                    v.lang.includes('zh_CN') ||
-                    v.lang.includes('cmn')
-                );
-                if (zhVoice) {
-                    utterance.voice = zhVoice;
-                    console.log('🗣️ 使用語音:', zhVoice.name);
-                }
-                
-                utterance.onstart = () => console.log('🗣️ 語音開始');
-                utterance.onerror = (e) => console.log('🗣️ 語音錯誤:', e.error);
-                utterance.onend = () => console.log('🗣️ 語音結束');
-                
-                speechSynthesis.speak(utterance);
-                console.log('🗣️ 語音已排入');
-            };
-            
-            // 確保 voices 已載入
-            const voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                console.log('🗣️ 等待語音引擎載入...');
-                speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
-                speechSynthesis.getVoices();
-            } else {
-                doSpeak();
+            // iOS Safari 需要先 resume
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
             }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            utterance.volume = 1.0;
+            
+            // 嘗試使用中文語音
+            const voices = speechSynthesis.getVoices();
+            const zhVoice = voices.find(v => 
+                v.lang.includes('zh-TW') || 
+                v.lang.includes('zh_TW') ||
+                v.lang.includes('zh-CN') ||
+                v.lang.includes('zh_CN') ||
+                v.lang.includes('cmn')
+            );
+            if (zhVoice) {
+                utterance.voice = zhVoice;
+            }
+            
+            utterance.onstart = () => console.log('🗣️ 語音開始');
+            utterance.onerror = (e) => console.log('🗣️ 語音錯誤:', e.error);
+            utterance.onend = () => console.log('🗣️ 語音結束');
+            
+            speechSynthesis.speak(utterance);
+            console.log('🗣️ 語音已排入:', text.substring(0, 30));
         }
         
         // Google Gemini TTS（修復音頻格式問題）
