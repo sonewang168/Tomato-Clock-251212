@@ -1280,7 +1280,7 @@
             <div class="splash-text">休</div>
         </div>
         <div class="splash-subtitle">專注工作，適時休息</div>
-        <div class="splash-version">Pro v5.4</div>
+        <div class="splash-version">Pro v5.4.1</div>
     </div>
 
     <!-- 全螢幕按鈕 -->
@@ -1969,7 +1969,7 @@
                 <div class="settings-header">ℹ️ 關於</div>
                 <div class="setting-item">
                     <span>版本</span>
-                    <span style="color:var(--text-secondary);">Pro v5.4</span>
+                    <span style="color:var(--text-secondary);">Pro v5.4.1</span>
                 </div>
                 <div class="setting-item">
                     <span>快捷鍵</span>
@@ -3803,7 +3803,7 @@
             }
         }
         
-        // Google Gemini TTS（使用正確的 TTS 模型）
+        // Google Gemini TTS（修復音頻格式問題）
         async function speakWithGemini(text) {
             if (!settings.geminiApiKey) {
                 speakWithWebAPI(text);
@@ -3849,7 +3849,31 @@
                     const audioPart = data.candidates[0].content.parts.find(p => p.inlineData?.mimeType?.includes('audio'));
                     if (audioPart) {
                         const audioData = audioPart.inlineData.data;
-                        const audioBlob = base64ToBlob(audioData, audioPart.inlineData.mimeType);
+                        const mimeType = audioPart.inlineData.mimeType;
+                        console.log('🤖 音頻格式:', mimeType);
+                        
+                        // 解碼 Base64
+                        const binaryString = atob(audioData);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        
+                        // 如果是 PCM 格式 (audio/L16)，轉換成 WAV
+                        let audioBlob;
+                        if (mimeType.includes('L16') || mimeType.includes('pcm')) {
+                            // 解析 mimeType 取得 sample rate（預設 24000）
+                            const rateMatch = mimeType.match(/rate=(\d+)/);
+                            const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
+                            
+                            // PCM 轉 WAV
+                            audioBlob = pcmToWav(bytes, sampleRate);
+                            console.log('🤖 PCM 轉 WAV 完成, sampleRate:', sampleRate);
+                        } else {
+                            // 其他格式直接使用
+                            audioBlob = new Blob([bytes], { type: mimeType });
+                        }
+                        
                         const audioUrl = URL.createObjectURL(audioBlob);
                         const audio = new Audio(audioUrl);
                         await audio.play();
@@ -3864,6 +3888,66 @@
                 console.error('❌ Gemini TTS 錯誤:', error);
                 speakWithWebAPI(text);
             }
+        }
+        
+        // PCM 轉 WAV 格式（Gemini 返回 audio/L16 需要轉換）
+        function pcmToWav(pcmData, sampleRate = 24000) {
+            const numChannels = 1;  // 單聲道
+            const bitsPerSample = 16;
+            const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+            const blockAlign = numChannels * bitsPerSample / 8;
+            const dataSize = pcmData.length;
+            const headerSize = 44;
+            const totalSize = headerSize + dataSize;
+            
+            const buffer = new ArrayBuffer(totalSize);
+            const view = new DataView(buffer);
+            
+            // WAV 標頭
+            // "RIFF"
+            view.setUint8(0, 'R'.charCodeAt(0));
+            view.setUint8(1, 'I'.charCodeAt(0));
+            view.setUint8(2, 'F'.charCodeAt(0));
+            view.setUint8(3, 'F'.charCodeAt(0));
+            // 文件大小
+            view.setUint32(4, totalSize - 8, true);
+            // "WAVE"
+            view.setUint8(8, 'W'.charCodeAt(0));
+            view.setUint8(9, 'A'.charCodeAt(0));
+            view.setUint8(10, 'V'.charCodeAt(0));
+            view.setUint8(11, 'E'.charCodeAt(0));
+            // "fmt "
+            view.setUint8(12, 'f'.charCodeAt(0));
+            view.setUint8(13, 'm'.charCodeAt(0));
+            view.setUint8(14, 't'.charCodeAt(0));
+            view.setUint8(15, ' '.charCodeAt(0));
+            // fmt chunk 大小
+            view.setUint32(16, 16, true);
+            // 音頻格式 (1 = PCM)
+            view.setUint16(20, 1, true);
+            // 聲道數
+            view.setUint16(22, numChannels, true);
+            // 採樣率
+            view.setUint32(24, sampleRate, true);
+            // 位元組率
+            view.setUint32(28, byteRate, true);
+            // 區塊對齊
+            view.setUint16(32, blockAlign, true);
+            // 位元深度
+            view.setUint16(34, bitsPerSample, true);
+            // "data"
+            view.setUint8(36, 'd'.charCodeAt(0));
+            view.setUint8(37, 'a'.charCodeAt(0));
+            view.setUint8(38, 't'.charCodeAt(0));
+            view.setUint8(39, 'a'.charCodeAt(0));
+            // 數據大小
+            view.setUint32(40, dataSize, true);
+            
+            // 複製 PCM 數據
+            const wavBytes = new Uint8Array(buffer);
+            wavBytes.set(pcmData, headerSize);
+            
+            return new Blob([buffer], { type: 'audio/wav' });
         }
         
         // ElevenLabs TTS
