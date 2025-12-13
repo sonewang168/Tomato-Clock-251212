@@ -48,9 +48,10 @@ function handleSendNow(data) {
   const dailyGoal = data.dailyGoal || 8;
   
   var message = '';
+  var remaining = dailyGoal - todayCount;
   
   if (phase === 'work') {
-    var remaining = dailyGoal - todayCount;
+    // 番茄鐘/課堂模式 - 工作完成
     message = '🍅 番茄完成！\n\n';
     message += '✅ 今天已完成 ' + todayCount + ' 個番茄\n';
     
@@ -62,8 +63,26 @@ function handleSendNow(data) {
       message += '🏆 超越目標 ' + Math.abs(remaining) + ' 個！\n';
     }
     message += '\n☕ 休息一下吧！';
+    
+  } else if (phase === 'hourly') {
+    // 整點模式 - 整點提醒
+    var now = new Date();
+    var hour = now.getHours();
+    var timeDesc = hour < 12 ? '上午' : (hour < 18 ? '下午' : '晚上');
+    
+    message = '⏰ 整點提醒！\n\n';
+    message += timeDesc + '好！休息時間到了\n';
+    message += '📊 今天已完成 ' + todayCount + ' 個番茄\n';
+    
+    if (remaining > 0) {
+      message += '🎯 還需要 ' + remaining + ' 個達成目標\n';
+    } else {
+      message += '🏆 今日目標已達成！\n';
+    }
+    message += '\n☕ 休息一下吧！';
+    
   } else {
-    var remaining = dailyGoal - todayCount;
+    // 休息結束
     message = '☕ 休息結束！\n\n';
     message += '📊 今天已完成 ' + todayCount + ' 個番茄\n';
     if (remaining > 0) {
